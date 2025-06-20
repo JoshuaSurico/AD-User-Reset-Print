@@ -1,0 +1,77 @@
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.userprefs
+*.pdb
+*.obj
+*.exe
+*.dll
+*.pri
+*.winmd
+*.appx
+*.appxbundle
+*.xap
+*.cer
+*.pfx
+*.snk
+*.vssscc
+*.vspscc
+*.dsmd
+*.ssdps
+*.tssps
+*.tvsps
+
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Aa]rm/
+[Xx]86/
+[Xx]64/
+[Aa]ny[Cc]pu/
+
+# Packages
+packages/
+*.nupkg
+
+# Resharper
+*.resharper
+*.resharper.user
+
+# StyleCop
+StyleCop.Cache
+
+# Test Results
+TestResults/
+*.trx
+
+# Visual Studio Code specific (if you also use VS Code)
+.vscode/
+
+# NuGet directories
+.nuget/NuGetScratch/
+
+# Miscellaneous
+Thumbs.db
+Desktop.ini
+_UpgradeReport_Files/
+
+# Temporary files
+*.~
+*.bak
+*.scc
+
+# Rider IDE
+.idea/
+
+# DotNet Core (if any components are used)
+publish/
+
+# Log files
+*.log
+
+# User-specific settings for the solution
+*.vshost.exe
+*.vshost.exe.config
