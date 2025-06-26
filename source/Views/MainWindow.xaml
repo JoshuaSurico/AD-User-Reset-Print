@@ -1,0 +1,36 @@
+﻿<Window x:Class="AD_User_Reset_Print.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AD_User_Reset_Print.Views"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="600" Width="800"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Button x:Name="btnADSettings" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
+            <Image Source="/Resources/Icons/data-storage_20.png" />
+        </Button>
+        <Button x:Name="btnUISettings" HorizontalAlignment="Left" Margin="70,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
+            <Image Source="/Resources/Icons/reglages_20.png" />
+        </Button>
+        <Button x:Name="btnHelp" HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
+            <Image Source="/Resources/Icons/question_20.png" />
+        </Button>
+        <Button x:Name="btnResetPsw" HorizontalAlignment="Left" Margin="190,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
+            <Image Source="/Resources/Icons/reset-password_20.png" />
+        </Button>
+        <Button x:Name="btnPrint" HorizontalAlignment="Left" Margin="250,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
+            <Image Source="/Resources/Icons/printer_20.png" />
+        </Button>
+        <Button x:Name="btnSync" HorizontalAlignment="Left" Margin="310,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
+            <Image Source="/Resources/Icons/rafraichir_20.png" />
+        </Button>
+        <ProgressBar x:Name="pbUserSync" HorizontalAlignment="Left" Height="40" Margin="370,10,0,0" VerticalAlignment="Top" Width="416"/>
+        <Label Content="Dernière Sync. : dd.MM.yyyy HH:mm:ss " HorizontalAlignment="Left" Margin="370,10,0,0" VerticalAlignment="Top" Width="416" FontSize="20"/>
+        <Button x:Name="btnFilter" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Height="40" Width="40">
+            <Image Source="/Resources/Icons/filtre_20.png" />
+        </Button>
+        <ListBox d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,130,0,0" Width="776" Height="409" FontSize="20"/>
+    </Grid>
+</Window>

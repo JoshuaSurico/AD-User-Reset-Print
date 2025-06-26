@@ -9,4 +9,55 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Resources\Icons\connection_20.png" />
+    <None Remove="Resources\Icons\data-storage_20.png" />
+    <None Remove="Resources\Icons\filtre_20.png" />
+    <None Remove="Resources\Icons\printer_20.png" />
+    <None Remove="Resources\Icons\profil_20.png" />
+    <None Remove="Resources\Icons\question_20.png" />
+    <None Remove="Resources\Icons\rafraichir_20.png" />
+    <None Remove="Resources\Icons\reglages_20.png" />
+    <None Remove="Resources\Icons\reset-password_20.png" />
+    <None Remove="Resources\Icons\search-file_20.png" />
+    <None Remove="Resources\SplashScreen\gyre.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="9.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Icons\connection_20.png" />
+    <Resource Include="Resources\Icons\data-storage_20.png" />
+    <Resource Include="Resources\Icons\filtre_20.png" />
+    <Resource Include="Resources\Icons\printer_20.png" />
+    <Resource Include="Resources\Icons\profil_20.png" />
+    <Resource Include="Resources\Icons\question_20.png" />
+    <Resource Include="Resources\Icons\rafraichir_20.png" />
+    <Resource Include="Resources\Icons\reglages_20.png" />
+    <Resource Include="Resources\Icons\reset-password_20.png" />
+    <Resource Include="Resources\Icons\search-file_20.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SplashScreen Include="Resources\SplashScreen\gyre.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Credentials.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Credentials.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Credentials.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Credentials.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
 </Project>

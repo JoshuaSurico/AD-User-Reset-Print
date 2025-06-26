@@ -1,8 +1,7 @@
 ﻿<Application x:Class="AD_User_Reset_Print.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:AD_User_Reset_Print"
-             StartupUri="MainWindow.xaml">
+             xmlns:local="clr-namespace:AD_User_Reset_Print">
     <Application.Resources>
          
     </Application.Resources>
