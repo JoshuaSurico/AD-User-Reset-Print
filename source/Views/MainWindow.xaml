@@ -5,32 +5,46 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AD_User_Reset_Print.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="800"
+        Title="AD-USER-RESET-PRINT"
+        Height="600"
+        Width="800"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Button x:Name="btnADSettings" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
-            <Image Source="/Resources/Icons/data-storage_20.png" />
-        </Button>
-        <Button x:Name="btnUISettings" HorizontalAlignment="Left" Margin="70,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
-            <Image Source="/Resources/Icons/reglages_20.png" />
-        </Button>
-        <Button x:Name="btnHelp" HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
-            <Image Source="/Resources/Icons/question_20.png" />
-        </Button>
-        <Button x:Name="btnResetPsw" HorizontalAlignment="Left" Margin="190,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
-            <Image Source="/Resources/Icons/reset-password_20.png" />
-        </Button>
-        <Button x:Name="btnPrint" HorizontalAlignment="Left" Margin="250,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
-            <Image Source="/Resources/Icons/printer_20.png" />
-        </Button>
-        <Button x:Name="btnSync" HorizontalAlignment="Left" Margin="310,10,0,0" VerticalAlignment="Top" Height="40" Width="40">
-            <Image Source="/Resources/Icons/rafraichir_20.png" />
-        </Button>
-        <ProgressBar x:Name="pbUserSync" HorizontalAlignment="Left" Height="40" Margin="370,10,0,0" VerticalAlignment="Top" Width="416"/>
-        <Label Content="Dernière Sync. : dd.MM.yyyy HH:mm:ss " HorizontalAlignment="Left" Margin="370,10,0,0" VerticalAlignment="Top" Width="416" FontSize="20"/>
-        <Button x:Name="btnFilter" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Height="40" Width="40">
-            <Image Source="/Resources/Icons/filtre_20.png" />
-        </Button>
-        <ListBox d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,130,0,0" Width="776" Height="409" FontSize="20"/>
-    </Grid>
+    <Border Background="AliceBlue" BorderBrush="LightGray" BorderThickness="2" MouseLeftButtonDown="Window_MouseLeftButtonDown">
+        <Grid>
+            <Button x:Name="btnADSettings" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnADSettings_Click">
+                <Image Source="/Resources/Icons/data-storage.png"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Button>
+            <Button x:Name="btnUISettings" HorizontalAlignment="Left" Margin="70,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnUISettings_Click">
+                <Image Source="/Resources/Icons/reglages.png"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Button>
+            <Button x:Name="btnHelp" HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnHelp_Click">
+                <Image Source="/Resources/Icons/question.png"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Button>
+            <Button x:Name="btnResetPsw" HorizontalAlignment="Left" Margin="190,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnResetPsw_Click">
+                <Image Source="/Resources/Icons/reset-password.png"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Button>
+            <Button x:Name="btnPrint" HorizontalAlignment="Left" Margin="250,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnPrint_Click">
+                <Image Source="/Resources/Icons/printer.png"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Button>
+            <Button x:Name="btnSync" HorizontalAlignment="Left" Margin="310,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnSync_Click">
+                <Image Source="/Resources/Icons/rafraichir.png"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Button>
+            <ProgressBar x:Name="pbUserSync" HorizontalAlignment="Stretch" Margin="370,10,10,0" VerticalAlignment="Top" Height="40"/>
+            <Label x:Name="lblUserSyncTime" Content="Dernière Sync. : dd.mm.yyyy hh:mm:ss " Margin="370,10,32,0" VerticalAlignment="Top" FontSize="20" Height="40"/>
+            <Button x:Name="btnFilter" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnFilter_Click">
+                <Image Source="/Resources/Icons/filtre.png"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            </Button>
+            <TextBox x:Name="txtbSearch" HorizontalAlignment="Stretch" Margin="70,70,10,0" TextWrapping="Wrap" Text="TextBox" FontSize="20" TextAlignment="Center" VerticalContentAlignment="Center" Height="40"/>
+            <ListBox d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,130,10,10" FontSize="20"/>
+            <Button x:Name="BtnReset" Content="Reset" HorizontalAlignment="Left" Margin="545,390,0,0" VerticalAlignment="Top" Height="141" Width="174" FontSize="48" Click="BtnReset_Click"/>
+        </Grid>
+    </Border>
 </Window>

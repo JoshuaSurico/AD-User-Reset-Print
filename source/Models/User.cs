@@ -8,7 +8,6 @@ namespace AD_User_Reset_Print.Models
 {
     internal class User
     {
-        public List<int> LinkIDs { get; set; }
         public string Domain { get; set; }
         public string SAMAccountName { get; set; }
         public string DisplayName { get; set; }
@@ -24,7 +23,7 @@ namespace AD_User_Reset_Print.Models
             // Parameterless constructor
         }
 
-        public User(string domain, string sAMAccountName, string displayName, string givenName, string sn, string mail, string title, string description)
+        public User(string domain, string sAMAccountName, string displayName, string givenName, string sn, string mail, string title, string description, List<string> userGroups)
         {
             Domain = domain;
             SAMAccountName = sAMAccountName;
@@ -34,6 +33,7 @@ namespace AD_User_Reset_Print.Models
             Mail = mail;
             Title = title;
             Description = description;
+            UserGroups = userGroups;
         }
     }
 }

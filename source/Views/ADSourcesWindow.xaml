@@ -1,0 +1,41 @@
+﻿<Window x:Class="AD_User_Reset_Print.Views.ADSourcesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AD_User_Reset_Print.Views"
+        xmlns:models="clr-namespace:AD_User_Reset_Print.Models"
+        mc:Ignorable="d"
+        Title="ADsList" Height="328" Width="500"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterOwner"
+        LocationChanged="Window_LocationChanged"
+        ShowInTaskbar="False">
+    <Border Background="AliceBlue" BorderBrush="LightGray" BorderThickness="2" CornerRadius="20"
+            MouseLeftButtonDown="Window_MouseLeftButtonDown">
+        <Grid>
+            <Label Content="Listes des ADs cibles" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Top" FontSize="20" FontWeight="Bold"/>
+
+            <Button x:Name="btnAdd" Content="Ajouter" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top" FontSize="20" Width="140" Click="BtnAdd_Click"/>
+            <Button x:Name="btnRemove" Content="Enlever" HorizontalAlignment="Center" Margin="0,52,0,0" VerticalAlignment="Top" FontSize="20" Width="140" Click="BtnRemove_Click"/>
+            <Button x:Name="btnModify" Content="Modifier" HorizontalAlignment="Left" Margin="348,52,0,0" VerticalAlignment="Top" FontSize="20" Width="140" Click="BtnModify_Click"/>
+
+            <ListBox x:Name="lbADSources" ItemsSource="{Binding AdSourceList}"  d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,88,0,0" Width="480" Height="187" FontSize="20" SelectionChanged="lbADSources_SelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Domain}" FontWeight="Bold"/>
+                            <TextBlock Text=" - "/>
+                            <TextBlock Text="{Binding Username}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Button x:Name="btnClose" Content="Fermer" HorizontalAlignment="Center" Margin="0,280,0,0" VerticalAlignment="Top" FontSize="20" Width="476" Click="btnClose_Click"/>
+        </Grid>
+    </Border>
+</Window>
