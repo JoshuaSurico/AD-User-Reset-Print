@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
-using System.Net.NetworkInformation;
-using System.Security.Principal;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Threading.Tasks;
 
 namespace AD_User_Reset_Print.Services.AD
@@ -17,258 +17,46 @@ namespace AD_User_Reset_Print.Services.AD
 
         private static readonly Guid ResetPasswordGuid = new("00299570-246d-11d0-a768-00aa006e0529");
         private static readonly Guid UnicodePwdGuid = new("bf967a0a-0de6-11d0-a285-00aa003049e2");
+        private const int MemberSampleSize = 2;
 
         public async Task<PermissionCheckResult> RunPermissionCheckAsync(string domain, string username, string password, List<string> targetGroupNames)
         {
             var result = new PermissionCheckResult();
-            bool isUserHighlyPrivileged = false;
-
             OnOutputMessage?.Invoke($"Starting permission check for user '{username}' on domain '{domain}'...");
 
             try
             {
                 await Task.Run(() =>
                 {
-                    OnOutputMessage?.Invoke($"Attempting to ping domain controller at '{domain}'...");
-                    if (!IsDomainReachable(domain))
+                    // Step 1: Perform initial connection and find the user's AD object.
+                    // This is a "fail-fast" check. If it fails, we stop immediately.
+                    if (!TryInitialConnection(domain, username, password, result, out var domainRootEntry, out var userEntry))
                     {
-                        OnOutputMessage?.Invoke($"Warning: Domain controller for '{domain}' is not reachable via Ping. This might be due to firewall rules, but we will still attempt LDAP connectivity.");
-                    }
-                    else
-                    {
-                        OnOutputMessage?.Invoke($"Successfully pinged domain controller at '{domain}'.");
+                        return; // result object is already populated with the error message.
                     }
 
-                    DirectoryEntry domainRootEntry;
-                    try
-                    {
-                        OnOutputMessage?.Invoke($"Attempting to bind to domain '{domain}' with user '{username}' via LDAP...");
-                        domainRootEntry = new DirectoryEntry($"LDAP://{domain}", username, password)
-                        {
-                            AuthenticationType = AuthenticationTypes.Secure
-                        };
-                        string? dn = domainRootEntry.Properties["distinguishedName"].Value?.ToString();
-                        domainRootEntry.RefreshCache();
-                        OnOutputMessage?.Invoke($"Successfully bound to domain root: {dn ?? "N/A"} with provided credentials.");
-                    }
-                    catch (DirectoryServicesCOMException dse)
-                    {
-                        string msg;
-                        if (dse.ErrorCode == -2147023570)
-                        {
-                            msg = $"Error: Authentication failed for user '{username}' on domain '{domain}'. Please check the username and password. (AD Error Code: 0x{dse.ErrorCode:X})";
-                        }
-                        else if (dse.ErrorCode == -2147016646)
-                        {
-                            msg = $"Error: The Active Directory server for '{domain}' is not operational or cannot be contacted on LDAP ports (e.g., 389/636), even if ping responded. Check DC health and firewall rules. (AD Error Code: 0x{dse.ErrorCode:X})";
-                        }
-                        else
-                        {
-                            msg = $"Error: AD Binding Error: {dse.Message} (Error Code: 0x{dse.ErrorCode:X})\nPossible causes: General AD connectivity, DNS issues for SRV records, or insufficient permissions for initial bind.";
-                        }
-                        OnOutputMessage?.Invoke(msg);
-                        result.IsSuccessful = false;
-                        result.ErrorMessage = msg;
-                        return; // IMPORTANT: Exit here if initial bind fails
-                    }
-                    catch (Exception ex)
-                    {
-                        string msg = $"Error: An unexpected error occurred during initial AD bind: {ex.Message}";
-                        OnOutputMessage?.Invoke(msg);
-                        result.IsSuccessful = false;
-                        result.ErrorMessage = msg;
-                        return; // IMPORTANT: Exit here if initial bind fails
-                    }
-
-                    // If we reach here, initial bind was successful. Now proceed with user/group checks.
-                    // Set IsSuccessful to true initially, and only set to false if subsequent checks fail.
+                    // If we get here, the initial bind and user lookup was successful.
                     result.IsSuccessful = true;
 
-
-                    using DirectoryEntry? userEntry = FindADObject(domainRootEntry, username, "user");
+                    // Step 2: Get user's group memberships (SIDs) and check for high-privilege status.
+                    if (!CheckUserPrivileges(userEntry!, domain, username, password, result, out var userSids))
                     {
-                        if (userEntry == null)
-                        {
-                            string msg = $"Error: User '{username}' not found in domain '{domain}'. Ensure the username is correct and the account exists.";
-                            OnOutputMessage?.Invoke(msg);
-                            result.IsSuccessful = false;
-                            result.ErrorMessage = msg;
-                            return;
-                        }
-                        OnOutputMessage?.Invoke($"User '{username}' object found (DN: {userEntry.Properties["distinguishedName"].Value?.ToString() ?? "N/A"}).");
-
-                        HashSet<SecurityIdentifier> userSids;
-                        try
-                        {
-                            OnOutputMessage?.Invoke($"Enumerating group memberships for '{username}'...");
-                            userSids = GetAllUserGroupSids(userEntry, domain, username, password);
-                            if (userSids.Count == 0)
-                            {
-                                OnOutputMessage?.Invoke($"Warning: No group SIDs found for user '{username}'. This might indicate a problem or the user has no group memberships.");
-                            }
-                            else
-                            {
-                                OnOutputMessage?.Invoke($"Found {userSids.Count} SIDs for '{username}' (including self and groups).");
-                            }
-                            foreach (var sid in userSids)
-                            {
-                                try
-                                {
-                                    string name = sid.Translate(typeof(NTAccount)).ToString();
-                                    OnOutputMessage?.Invoke($"  - SID: {sid.Value} ({name})");
-                                }
-                                catch (IdentityNotMappedException)
-                                {
-                                    OnOutputMessage?.Invoke($"  - SID: {sid.Value} (Cannot map to NTAccount - e.g., WellKnown SID or foreign domain)");
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            string msg = $"Error: Error enumerating group memberships for '{username}': {ex.Message}\nThis might indicate insufficient permissions for the user '{username}' to read its own group memberships, or a problem with the domain controller.";
-                            OnOutputMessage?.Invoke(msg);
-                            result.IsSuccessful = false;
-                            result.ErrorMessage = msg;
-                            return;
-                        }
-
-                        List<string> privilegedGroupMemberships = [];
-
-                        if (userSids.Any(sid => sid.Value.EndsWith("-512")))
-                        {
-                            privilegedGroupMemberships.Add("Domain Admins");
-                        }
-                        if (userSids.Any(sid => sid.Value == "S-1-5-32-544"))
-                        {
-                            privilegedGroupMemberships.Add("Builtin\\Administrators");
-                        }
-                        if (userSids.Any(sid => sid.Value.EndsWith("-519")))
-                        {
-                            privilegedGroupMemberships.Add("Enterprise Admins");
-                        }
-
-                        isUserHighlyPrivileged = privilegedGroupMemberships.Count != 0;
-                        result.IsHighlyPrivileged = isUserHighlyPrivileged;
-
-                        if (isUserHighlyPrivileged)
-                        {
-                            string groupsList = string.Join(", ", privilegedGroupMemberships);
-                            OnOutputMessage?.Invoke($"\nUser '{username}' IS a member of a highly privileged administrative group(s): {groupsList}.");
-                            OnOutputMessage?.Invoke("  Assuming full password reset permissions for all target groups.");
-                            result.HasFullPermission = true;
-                        }
-                        else
-                        {
-                            OnOutputMessage?.Invoke($"\nUser '{username}' is NOT a member of recognized highly privileged administrative groups.");
-                            OnOutputMessage?.Invoke("  Proceeding with specific ACL checks for 'Reset Password' extended right.");
-                        }
-
-                        foreach (string groupName in targetGroupNames)
-                        {
-                            OnOutputMessage?.Invoke($"\n--- Processing Target Group: {groupName} ---");
-                            using DirectoryEntry? targetGroupEntry = FindADObject(domainRootEntry, groupName, "group");
-                            {
-                                if (targetGroupEntry == null)
-                                {
-                                    OnOutputMessage?.Invoke($"  Warning: Target group '{groupName}' not found in domain '{domain}'. Skipping this group.");
-                                    result.TargetGroupPermissions[groupName] = false;
-                                    result.IsSuccessful = false; // A specific target group not found should fail the overall check
-                                    result.ErrorMessage += (string.IsNullOrWhiteSpace(result.ErrorMessage) ? "" : "\n") + $"Target group '{groupName}' not found.";
-                                    continue;
-                                }
-                                OnOutputMessage?.Invoke($"  Found target group: {targetGroupEntry.Properties["distinguishedName"].Value?.ToString() ?? "N/A"}");
-
-                                if (isUserHighlyPrivileged)
-                                {
-                                    OnOutputMessage?.Invoke($"  -> Conclusion for group '{groupName}': User '{username}' (highly privileged admin) has assumed permission to reset passwords for its members.");
-                                    result.TargetGroupPermissions[groupName] = true;
-                                    continue;
-                                }
-
-                                List<string> memberDns = GetGroupMembers(targetGroupEntry);
-                                if (memberDns.Count != 0)
-                                {
-                                    OnOutputMessage?.Invoke($"  Found {memberDns.Count} members in group '{groupName}'.");
-                                    const int sampleSize = 2;
-                                    Random rand = new();
-                                    List<string> membersToSample = [.. memberDns.OrderBy(x => rand.Next()).Take(sampleSize)];
-
-                                    if (membersToSample.Count == 0)
-                                    {
-                                        OnOutputMessage?.Invoke($"  No user members found in group '{groupName}' to sample for permission check (after filtering non-users).");
-                                        result.TargetGroupPermissions[groupName] = false;
-                                        result.IsSuccessful = false; // No user members to check means we can't confirm permissions
-                                        result.ErrorMessage += (string.IsNullOrWhiteSpace(result.ErrorMessage) ? "" : "\n") + $"No user members found in group '{groupName}' for permission check.";
-                                    }
-                                    else
-                                    {
-                                        bool anySampledUserHasAclPermission = false;
-                                        OnOutputMessage?.Invoke($"  Checking 'Reset Password' ACL for {membersToSample.Count} random user(s) in group '{groupName}'.");
-
-                                        foreach (string memberDn in membersToSample)
-                                        {
-                                            using DirectoryEntry memberEntry = new($"LDAP://{memberDn}", username, password);
-                                            {
-                                                if (memberEntry.SchemaClassName.Equals("user", StringComparison.OrdinalIgnoreCase))
-                                                {
-                                                    string memberSamAccountName = memberEntry.Properties["sAMAccountName"]?.Value?.ToString() ?? "N/A";
-                                                    OnOutputMessage?.Invoke($"    Checking ACL for user: {memberSamAccountName} (DN: {memberDn})");
-
-                                                    bool canReset = CheckResetPasswordPermission(memberEntry, userSids);
-                                                    OnOutputMessage?.Invoke($"      '{username}' (or a group he's in) can reset password for '{memberSamAccountName}': {(canReset ? "YES" : "NO")}");
-
-                                                    if (canReset)
-                                                    {
-                                                        anySampledUserHasAclPermission = true;
-                                                        break;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    OnOutputMessage?.Invoke($"    Skipping non-user member: {memberDn} (Schema: {memberEntry.SchemaClassName})");
-                                                }
-                                            }
-                                        }
-
-                                        if (anySampledUserHasAclPermission)
-                                        {
-                                            OnOutputMessage?.Invoke($"\nConclusion for group '{groupName}': User '{username}' has explicit 'Reset Password' ACL permission for sampled members.");
-                                            result.TargetGroupPermissions[groupName] = true;
-                                        }
-                                        else
-                                        {
-                                            OnOutputMessage?.Invoke($"\nConclusion for group '{groupName}': User '{username}' DOES NOT have explicit 'Reset Password' ACL permission for sampled members.");
-                                            OnOutputMessage?.Invoke("  Please change the user. This one doesn't have enough permission based on explicit ACLs.");
-                                            result.TargetGroupPermissions[groupName] = false;
-                                            result.IsSuccessful = false; // Explicit ACL check failed for sampled members, so overall check fails
-                                            result.ErrorMessage += (string.IsNullOrWhiteSpace(result.ErrorMessage) ? "" : "\n") + $"User lacks permission for group '{groupName}'.";
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    OnOutputMessage?.Invoke($"  Group '{groupName}' has no members or members could not be enumerated.");
-                                    result.TargetGroupPermissions[groupName] = false;
-                                    result.IsSuccessful = false; // No members or couldn't enumerate means we can't confirm permissions
-                                    result.ErrorMessage += (string.IsNullOrWhiteSpace(result.ErrorMessage) ? "" : "\n") + $"Could not enumerate members for group '{groupName}'.";
-                                }
-                            }
-                        }
+                        return; // An error occurred getting group memberships. Stop.
                     }
+
+                    // Step 3: Process each target group based on the user's privilege level.
+                    ProcessTargetGroups(domainRootEntry!, username, password, targetGroupNames, userSids, result);
                 });
 
-                // Final check to ensure IsSuccessful is false if any error message was set
+                // Final check to ensure IsSuccessful is false if any error message was set during the process.
                 if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
                 {
                     result.IsSuccessful = false;
                 }
-                // Removed the redundant if/else if/else block here, as IsSuccessful is set throughout the process
-                // and a final check against ErrorMessage ensures correctness.
-
             }
             catch (Exception ex)
             {
-                string errorMessage = $"Error: An unexpected error occurred during permission check: {ex.Message}";
+                string errorMessage = $"Error: A critical unhandled error occurred during permission check: {ex.Message}";
                 OnOutputMessage?.Invoke(errorMessage);
                 System.Diagnostics.Debug.WriteLine($"Unhandled exception in RunPermissionCheck: {ex}");
                 result.IsSuccessful = false;
@@ -281,40 +69,259 @@ namespace AD_User_Reset_Print.Services.AD
             return result;
         }
 
+        /// <summary>
+        /// Attempts to connect to the domain and find the specified user object.
+        /// </summary>
+        /// <returns>True if connection and user lookup are successful, otherwise false.</returns>
+        private bool TryInitialConnection(string domain, string username, string password, PermissionCheckResult result, out DirectoryEntry? domainRootEntry, out DirectoryEntry? userEntry)
+        {
+            domainRootEntry = null;
+            userEntry = null;
+
+            OnOutputMessage?.Invoke($"\n--- Phase 1: Domain and User Validation ---");
+            OnOutputMessage?.Invoke($"Attempting to ping domain controller at '{domain}'...");
+            if (!IsDomainReachable(domain))
+            {
+                OnOutputMessage?.Invoke($"Warning: Domain controller for '{domain}' is not reachable via Ping. Proceeding with LDAP connection attempt...");
+            }
+            else
+            {
+                OnOutputMessage?.Invoke($"Successfully pinged domain controller at '{domain}'.");
+            }
+
+            try
+            {
+                OnOutputMessage?.Invoke($"Attempting to bind to domain '{domain}' with user '{username}'...");
+                domainRootEntry = new DirectoryEntry($"LDAP://{domain}", username, password) { AuthenticationType = AuthenticationTypes.Secure };
+                domainRootEntry.RefreshCache(); // Forces the connection
+                OnOutputMessage?.Invoke($"Successfully bound to domain root: {domainRootEntry.Properties["distinguishedName"].Value ?? "N/A"}.");
+            }
+            catch (DirectoryServicesCOMException dse)
+            {
+                // Handle specific, common AD connection errors
+                string msg = dse.ErrorCode switch
+                {
+                    -2147023570 => $"Error: Authentication failed for user '{username}'. Please check credentials. (Code: 0x{dse.ErrorCode:X})",
+                    -2147016646 => $"Error: The AD server for '{domain}' is not operational or firewalled. (Code: 0x{dse.ErrorCode:X})",
+                    _ => $"Error: AD Binding Error: {dse.Message} (Code: 0x{dse.ErrorCode:X})",
+                };
+                OnOutputMessage?.Invoke(msg);
+                result.ErrorMessage = msg;
+                return false;
+            }
+
+            userEntry = FindADObject(domainRootEntry, username, "user");
+            if (userEntry == null)
+            {
+                string msg = $"Error: User '{username}' not found in domain '{domain}'.";
+                OnOutputMessage?.Invoke(msg);
+                result.ErrorMessage = msg;
+                return false;
+            }
+
+            OnOutputMessage?.Invoke($"User object '{username}' found (DN: {userEntry.Properties["distinguishedName"].Value}).");
+            return true;
+        }
+
+        /// <summary>
+        /// Retrieves the user's security groups and checks for membership in highly-privileged groups.
+        /// </summary>
+        /// <returns>True if successful, otherwise false.</returns>
+        private bool CheckUserPrivileges(DirectoryEntry userEntry, string domain, string username, string password, PermissionCheckResult result, out HashSet<SecurityIdentifier> userSids)
+        {
+            userSids = [];
+            OnOutputMessage?.Invoke($"\n--- Phase 2: User Privilege Analysis ---");
+
+            try
+            {
+                OnOutputMessage?.Invoke($"Enumerating group memberships for '{username}'...");
+                userSids = GetAllUserGroupSids(userEntry, domain, username, password);
+                OnOutputMessage?.Invoke($"Found {userSids.Count} total security group memberships (SIDs).");
+            }
+            catch (Exception ex)
+            {
+                string msg = $"Error enumerating group memberships: {ex.Message}";
+                OnOutputMessage?.Invoke(msg);
+                result.ErrorMessage = msg;
+                return false;
+            }
+
+            var privilegedGroupMemberships = new List<string>();
+            if (userSids.Any(sid => sid.IsWellKnown(WellKnownSidType.AccountDomainAdminsSid))) privilegedGroupMemberships.Add("Domain Admins");
+            if (userSids.Any(sid => sid.IsWellKnown(WellKnownSidType.BuiltinAdministratorsSid))) privilegedGroupMemberships.Add("Administrators");
+            if (userSids.Any(sid => sid.IsWellKnown(WellKnownSidType.AccountEnterpriseAdminsSid))) privilegedGroupMemberships.Add("Enterprise Admins");
+
+            result.IsHighlyPrivileged = privilegedGroupMemberships.Count > 0;
+            if (result.IsHighlyPrivileged)
+            {
+                result.HasFullPermission = true;
+                string groupsList = string.Join(", ", privilegedGroupMemberships);
+                OnOutputMessage?.Invoke($"User IS a member of highly-privileged group(s): {groupsList}.");
+                OnOutputMessage?.Invoke("--> Assuming full permissions for all target groups.");
+            }
+            else
+            {
+                OnOutputMessage?.Invoke("User is NOT a member of highly-privileged groups.");
+                OnOutputMessage?.Invoke("--> Proceeding with specific ACL checks.");
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Iterates through each target group and calls the appropriate permission check logic.
+        /// </summary>
+        private void ProcessTargetGroups(DirectoryEntry domainRootEntry, string username, string password, List<string> targetGroupNames, HashSet<SecurityIdentifier> userSids, PermissionCheckResult result)
+        {
+            OnOutputMessage?.Invoke($"\n--- Phase 3: Target Group Permission Checks ---");
+            foreach (string groupName in targetGroupNames)
+            {
+                CheckPermissionsForSingleGroup(domainRootEntry, username, password, groupName, userSids, result);
+            }
+        }
+
+        /// <summary>
+        /// Performs the permission check for a single target group.
+        /// </summary>
+        private void CheckPermissionsForSingleGroup(DirectoryEntry domainRootEntry, string username, string password, string groupName, HashSet<SecurityIdentifier> userSids, PermissionCheckResult result)
+        {
+            OnOutputMessage?.Invoke($"\n--- Processing Target Group: {groupName} ---");
+            using var targetGroupEntry = FindADObject(domainRootEntry, groupName, "group");
+
+            if (targetGroupEntry == null)
+            {
+                OnOutputMessage?.Invoke($"  Warning: Target group '{groupName}' not found. Skipping.");
+                result.TargetGroupPermissions[groupName] = false;
+                result.ErrorMessage += $"\nTarget group '{groupName}' not found.";
+                return;
+            }
+
+            OnOutputMessage?.Invoke($"  Found target group: {targetGroupEntry.Properties["distinguishedName"].Value}");
+
+            if (result.IsHighlyPrivileged)
+            {
+                OnOutputMessage?.Invoke($"  -> Conclusion: User has assumed permissions (is Admin).");
+                result.TargetGroupPermissions[groupName] = true;
+                return;
+            }
+
+            List<string> memberDns = GetGroupMembers(targetGroupEntry);
+            if (memberDns.Count == 0)
+            {
+                OnOutputMessage?.Invoke($"  Warning: Group '{groupName}' has no members or they could not be enumerated.");
+                result.TargetGroupPermissions[groupName] = false;
+                result.ErrorMessage += $"\nNo members found to check in group '{groupName}'.";
+                return;
+            }
+
+            OnOutputMessage?.Invoke($"  Found {memberDns.Count} members. Sampling up to {MemberSampleSize} to check ACLs.");
+            bool hasPermission = VerifyAclOnSampledMembers(domainRootEntry, memberDns, username, password, userSids);
+
+            if (hasPermission)
+            {
+                OnOutputMessage?.Invoke($"  -> Conclusion for '{groupName}': YES, user has 'Reset Password' permission for sampled members.");
+                result.TargetGroupPermissions[groupName] = true;
+            }
+            else
+            {
+                OnOutputMessage?.Invoke($"  -> Conclusion for '{groupName}': NO, user does not have permission for sampled members.");
+                result.TargetGroupPermissions[groupName] = false;
+                result.ErrorMessage += $"\nUser lacks permission for group '{groupName}'.";
+            }
+        }
+
+        /// <summary>
+        /// Takes a random sample of group members and verifies if the user has reset password rights on any of them.
+        /// </summary>
+        /// <returns>True if permission is found on at least one sampled member, otherwise false.</returns>
+        private bool VerifyAclOnSampledMembers(DirectoryEntry domainRootEntry, List<string> memberDns, string username, string password, HashSet<SecurityIdentifier> userSids)
+        {
+            var rand = new Random();
+            var membersToSample = memberDns.OrderBy(x => rand.Next()).Take(MemberSampleSize).ToList();
+
+            foreach (string memberDn in membersToSample)
+            {
+                try
+                {
+                    // NEW STRATEGY: Use the existing authenticated connection to search for the member by its DN.
+                    // This is the most reliable way to find an object without creating a new, problematic connection.
+                    using var searcher = new DirectorySearcher(domainRootEntry)
+                    {
+                        // The distinguishedName must be escaped to be used in an LDAP filter.
+                        Filter = $"(distinguishedName={EscapeLdapFilter(memberDn)})",
+                        SearchScope = SearchScope.Subtree
+                    };
+                    // We don't need to load many properties, just enough to get the entry.
+                    searcher.PropertiesToLoad.Add("sAMAccountName");
+
+                    SearchResult? searchResult = searcher.FindOne();
+
+                    if (searchResult != null)
+                    {
+                        // If the search was successful, get the DirectoryEntry from the result.
+                        // This entry is guaranteed to be from a working connection.
+                        using DirectoryEntry memberEntry = searchResult.GetDirectoryEntry();
+
+                        string memberSam = memberEntry.Properties["sAMAccountName"]?.Value?.ToString() ?? "N/A";
+                        OnOutputMessage?.Invoke($"    Checking ACL for user: {memberSam} (DN: {memberDn})");
+
+                        if (CheckResetPasswordPermission(memberEntry, userSids))
+                        {
+                            OnOutputMessage?.Invoke($"      Permission found for {memberSam}.");
+                            return true; // Success! We found permission.
+                        }
+                    }
+                    else
+                    {
+                        OnOutputMessage?.Invoke($"    Warning: Could not find member object '{memberDn}' via search. It may have been deleted. Skipping.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // This will now catch any general errors with the search itself.
+                    OnOutputMessage?.Invoke($"    Warning: An error occurred while searching for member '{memberDn}'. Skipping. Error: {ex.Message}");
+                }
+            }
+
+            return false; // Looped through all samples and found no permissions.
+        }
+
+
+        // --- Helper Methods 
+
+        private static string EscapeLdapFilter(string value)
+        {
+            // According to RFC 2254
+            return value.Replace("\\", "\\5c")
+                        .Replace("*", "\\2a")
+                        .Replace("(", "\\28")
+                        .Replace(")", "\\29")
+                        .Replace("\0", "\\00");
+        }
+
         private bool IsDomainReachable(string domain)
         {
             try
             {
-                using Ping pingSender = new();
+                using var pingSender = new Ping();
                 PingReply reply = pingSender.Send(domain, 2000);
-                if (reply.Status == IPStatus.Success)
-                {
-                    return true;
-                }
-                else
-                {
-                    OnOutputMessage?.Invoke($"Info: Ping to '{domain}' failed with status: {reply.Status}.");
-                    return false;
-                }
+                return reply.Status == IPStatus.Success;
             }
-            catch (PingException ex)
+            catch (Exception ex)
             {
                 OnOutputMessage?.Invoke($"Info: Ping to '{domain}' failed: {ex.Message}.");
                 return false;
             }
-            catch (Exception ex)
-            {
-                OnOutputMessage?.Invoke($"Info: An unexpected error occurred during ping check for '{domain}': {ex.Message}.");
-                return false;
-            }
         }
+
         private static DirectoryEntry? FindADObject(DirectoryEntry domainRootEntry, string sAMAccountName, string objectCategory)
         {
-            using DirectorySearcher searcher = new(domainRootEntry);
-            searcher.Filter = $"(&(objectCategory={objectCategory})(sAMAccountName={sAMAccountName}))";
+            using var searcher = new DirectorySearcher(domainRootEntry)
+            {
+                Filter = $"(&(objectCategory={objectCategory})(sAMAccountName={sAMAccountName}))",
+                SearchScope = SearchScope.Subtree
+            };
             searcher.PropertiesToLoad.Add("distinguishedName");
             searcher.PropertiesToLoad.Add("sAMAccountName");
-            searcher.SearchScope = SearchScope.Subtree;
 
             SearchResult? result = searcher.FindOne();
             return result?.GetDirectoryEntry();
@@ -322,35 +329,16 @@ namespace AD_User_Reset_Print.Services.AD
 
         private static List<string> GetGroupMembers(DirectoryEntry groupEntry)
         {
-            List<string> members = [];
+            var members = new List<string>();
             try
             {
-                object? membersCollectionObject = groupEntry.Invoke("Members");
-
-                if (membersCollectionObject is not IEnumerable enumerableMembers)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Error: 'Invoke(\"Members\")' result is not enumerable for group '{groupEntry.Name}'. It returned type: {membersCollectionObject?.GetType().FullName ?? "null"}");
-                    return members;
-                }
-
+                if (groupEntry.Invoke("Members") is not IEnumerable enumerableMembers) return members;
                 foreach (object memberComObject in enumerableMembers)
                 {
-                    using DirectoryEntry memberEntry = new(memberComObject);
-                    if (memberEntry.Properties.Contains("distinguishedName"))
+                    using var memberEntry = new DirectoryEntry(memberComObject);
+                    if (memberEntry.Properties["distinguishedName"].Value is string dn)
                     {
-                        string? dn = memberEntry.Properties["distinguishedName"].Value?.ToString();
-                        if (dn != null)
-                        {
-                            members.Add(dn);
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Warning: Member '{memberEntry.Name}' in group '{groupEntry.Name}' has a distinguishedName property that is null.");
-                        }
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Warning: Member '{memberEntry.Name}' in group '{groupEntry.Name}' does not have a distinguishedName property.");
+                        members.Add(dn);
                     }
                 }
             }
@@ -363,43 +351,26 @@ namespace AD_User_Reset_Print.Services.AD
 
         private static HashSet<SecurityIdentifier> GetAllUserGroupSids(DirectoryEntry userEntry, string domainName, string username, string password)
         {
-            HashSet<SecurityIdentifier> sids = [];
+            var sids = new HashSet<SecurityIdentifier>();
             try
             {
-                using PrincipalContext context = new(ContextType.Domain, domainName, username, password);
+                using var context = new PrincipalContext(ContextType.Domain, domainName, username, password);
                 string? samAccountName = userEntry.Properties["sAMAccountName"]?.Value?.ToString();
-                if (string.IsNullOrEmpty(samAccountName))
-                {
-                    System.Diagnostics.Debug.WriteLine($"UserEntry for '{username}' has no sAMAccountName. Cannot fetch group SIDs.");
-                    return sids;
-                }
+                if (string.IsNullOrEmpty(samAccountName)) return sids;
 
-                using UserPrincipal? userPrincipal = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, samAccountName);
+                using var userPrincipal = UserPrincipal.FindByIdentity(context, IdentityType.SamAccountName, samAccountName);
+                if (userPrincipal == null) return sids;
 
-                if (userPrincipal != null)
+                foreach (Principal group in userPrincipal.GetAuthorizationGroups())
                 {
-                    foreach (Principal group in userPrincipal.GetAuthorizationGroups())
-                    {
-                        if (group.Sid != null)
-                        {
-                            sids.Add(group.Sid);
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Warning: Group '{group.Name}' has a null SID.");
-                        }
-                        group.Dispose();
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"UserPrincipal for '{username}' not found in domain '{domainName}'. This might indicate a problem with the user object or connectivity for the PrincipalContext.");
+                    if (group.Sid != null) sids.Add(group.Sid);
+                    group.Dispose();
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error enumerating group SIDs for '{username}' in domain '{domainName}': {ex.Message}");
-                throw;
+                System.Diagnostics.Debug.WriteLine($"Error enumerating group SIDs for '{username}': {ex.Message}");
+                throw; // Re-throw to be caught by the calling method.
             }
             return sids;
         }
@@ -409,41 +380,27 @@ namespace AD_User_Reset_Print.Services.AD
             try
             {
                 targetUserEntry.RefreshCache(["nTSecurityDescriptor"]);
-                ActiveDirectorySecurity security = targetUserEntry.ObjectSecurity;
+                var security = targetUserEntry.ObjectSecurity;
 
                 foreach (ActiveDirectoryAccessRule rule in security.GetAccessRules(true, true, typeof(SecurityIdentifier)))
                 {
-                    if (rule.AccessControlType == AccessControlType.Allow)
+                    if (rule.AccessControlType == AccessControlType.Allow &&
+                        rule.IdentityReference is SecurityIdentifier ruleSid &&
+                        userSids.Contains(ruleSid))
                     {
-                        if (rule.IdentityReference is SecurityIdentifier ruleSid && userSids.Contains(ruleSid))
+                        bool hasResetRight = (rule.ActiveDirectoryRights.HasFlag(ActiveDirectoryRights.ExtendedRight) && (rule.ObjectType.Equals(ResetPasswordGuid) || rule.ObjectType.Equals(Guid.Empty)));
+                        bool hasWritePwdRight = (rule.ActiveDirectoryRights.HasFlag(ActiveDirectoryRights.WriteProperty) && rule.ObjectType.Equals(UnicodePwdGuid));
+
+                        if (hasResetRight || hasWritePwdRight)
                         {
-                            bool isResetPasswordExtendedRight =
-                                rule.ActiveDirectoryRights.HasFlag(ActiveDirectoryRights.ExtendedRight) &&
-                                rule.ObjectType.Equals(ResetPasswordGuid);
-
-                            bool isAllExtendedRights =
-                                rule.ActiveDirectoryRights.HasFlag(ActiveDirectoryRights.ExtendedRight) &&
-                                rule.ObjectType.Equals(Guid.Empty);
-
-                            bool isWriteUnicodePwd =
-                                rule.ActiveDirectoryRights.HasFlag(ActiveDirectoryRights.WriteProperty) &&
-                                rule.ObjectType.Equals(UnicodePwdGuid);
-
-                            if (isResetPasswordExtendedRight || isAllExtendedRights || isWriteUnicodePwd)
-                            {
-                                return true;
-                            }
+                            return true;
                         }
                     }
                 }
             }
-            catch (DirectoryServicesCOMException dse)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error reading security for {targetUserEntry.Name}: {dse.Message} (Code: 0x{dse.ErrorCode:X})");
-            }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"General error during permission check for {targetUserEntry.Name}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error checking permissions for {targetUserEntry.Name}: {ex.Message}");
             }
             return false;
         }

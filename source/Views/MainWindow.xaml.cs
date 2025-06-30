@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
 using System.DirectoryServices.ActiveDirectory;
+using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -39,18 +40,28 @@ namespace AD_User_Reset_Print.Views
             this.DataContext = this;
 
             Users = [];
-            SelectedUser = new();
+            SelectedUser = null;
 
-            // For demo, let's ensure some credentials are saved (you'd do this in a setup screen)
-            if (!CredentialStorageService.AreCredentialsSaved())
+            LoadInitialData();
+        }
+
+        private void LoadInitialData()
+        {
+            string userListPath = AppSettings.UserListFilePath;
+            if (File.Exists(userListPath))
             {
-                List<CredentialEntry> demoCredentials = new List<CredentialEntry>
+                // UI-related logic: update ObservableCollection, update Label
+                var usersFromFile = JsonManagerService.ReadFromJson<User>(userListPath);
+                foreach(User user in usersFromFile)
                 {
-                    // This is just for demonstration purposes. In a real app, this would be set up via a secure UI.
-                    new("domain.com", "admin_user", "AdminPassword123!", new List<string> { "Domain Admins" })
-                };
-                CredentialStorageService.SaveCredentials(demoCredentials);
-                MessageBox.Show("Démo : Identifiants administrateur enregistrés. Veuillez les configurer via l'interface utilisateur pour une utilisation réelle.", "Configuration Initiale", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Users.Add(user);
+                }
+                DateTime lastSyncTime = File.GetLastWriteTime(userListPath);
+                lblUserSync.Content = $"Last sync: {lastSyncTime:dd.MM.yyyy HH:mm}";
+            }
+            else
+            {
+                lblUserSync.Content = "Not yet synchronized. Please click Sync.";
             }
         }
 
@@ -69,7 +80,7 @@ namespace AD_User_Reset_Print.Views
             _adSources.ShowDialog();
         }
 
-        private void BtnUISettings_Click(object sender, RoutedEventArgs e)
+        private void BtnSettings_Click(object sender, RoutedEventArgs e)
         {
 
         }
@@ -125,16 +136,77 @@ namespace AD_User_Reset_Print.Views
             PrintService.ShowPrintPreview(SelectedUser, passwordToPrint);
         }
 
-        private void BtnSync_Click(object sender, RoutedEventArgs e)
+        private async void BtnSync_Click(object sender, RoutedEventArgs e)
         {
-            SynchronizeUserService syncService = new SynchronizeUserService();
-            List<User> newUsers = syncService.Sync();
-            Users.Clear(); // Clear existing users
-            foreach (var user in newUsers)
+            var errors = new List<string>();
+            LoggingService.Clear();
+            btnViewLogs.Visibility = Visibility.Collapsed;
+
+            var progress = new Progress<ProgressReport>(report =>
             {
-                Users.Add(user); // Add newly fetched users
+                // This handler's ONLY job is to update the progress UI.
+                pbUserSync.Value = report.PercentComplete;
+                lblUserSync.Content = report.CurrentActivity;
+            });
+
+            btnSync.IsEnabled = false;
+            pbUserSync.Value = 0;
+            Users.Clear();
+
+            try
+            {
+                var syncService = new SynchronizeUserService();
+
+                // We wrap the entire call to Sync in Task.Run to force it onto a background thread.
+                // This keeps the UI completely responsive.
+                List<User> newUsers = await Task.Run(() => syncService.Sync(progress));
+
+                // Even if there were non-critical errors, we might still have users.
+                foreach (var user in newUsers)
+                {
+                    Users.Add(user);
+                }
             }
-            MessageBox.Show("Synchronization (demo) complete!", "Sync Status", MessageBoxButton.OK, MessageBoxImage.Information);
+            catch (Exception ex)
+            {
+                // This will now only catch truly critical, unhandled exceptions.
+                MessageBox.Show($"A critical error occurred during synchronization: {ex.Message}", "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                if (LoggingService.HasErrors)
+                {
+                    // Show the user where to find details.
+                    btnViewLogs.Visibility = Visibility.Visible;
+                    MessageBox.Show("Synchronization completed with errors. Click 'View Logs' for details.", "Sync Issues", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    // On success, set the final status.
+                    pbUserSync.Value = 100;
+                    DateTime lastSyncTime = DateTime.Now;
+                    lblUserSync.Content = $"Last sync: {lastSyncTime:dd.MM.yyyy HH:mm} ({Users.Count} users)";
+                }
+
+                btnSync.IsEnabled = true;
+            }
+        }
+
+        private void BtnViewLogs_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. Create a new instance of your LogsWindow.
+            var logWindow = new LogsWindow
+            {
+                // 2. Set the owner of the new window to this MainWindow.
+                //    This ensures it opens centered on top of the main window
+                //    and behaves correctly with minimize/close.
+                Owner = this
+            };
+
+            // 3. Show the window. We use Show() instead of ShowDialog() so that
+            //    the user can keep the log window open and still interact
+            //    with the main application if they wish.
+            logWindow.Show();
         }
 
         private void BtnFilter_Click(object sender, RoutedEventArgs e)
