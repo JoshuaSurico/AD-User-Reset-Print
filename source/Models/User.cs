@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AD_User_Reset_Print.Models
 {
-    internal class User
+    public class User
     {
         public string Domain { get; set; }
         public string SAMAccountName { get; set; }
@@ -34,6 +34,11 @@ namespace AD_User_Reset_Print.Models
             Title = title;
             Description = description;
             UserGroups = userGroups;
+        }
+
+        public override string ToString()
+        {
+            return Domain + " | " + SAMAccountName + ", " + DisplayName; // what to show in the ListBox
         }
     }
 }

@@ -25,7 +25,7 @@ namespace AD_User_Reset_Print
             mainWindow.Show();
 
             // 2. Check if any credentials are saved using the static method
-            while (!CredentialStorageService.AreCredentialsSaved())
+            /*while (!CredentialStorageService.AreCredentialsSaved())
             {
                 // 3. If no credentials, open ADSourcesWindow on top as a modal dialog
                 ADSourcesWindow adSources = new()
@@ -62,7 +62,7 @@ namespace AD_User_Reset_Print
                         return;
                     }
                 }
-            }
+            }*/
         }
     }
 }

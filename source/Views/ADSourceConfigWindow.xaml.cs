@@ -1,6 +1,6 @@
 ﻿using AD_User_Reset_Print.Models;
 using AD_User_Reset_Print.Properties;
-using AD_User_Reset_Print.Services;
+using AD_User_Reset_Print.Services.AD;
 using AD_User_Reset_Print.Views;
 using Newtonsoft.Json;
 using System;
@@ -99,18 +99,14 @@ namespace AD_User_Reset_Print.Views
 
         private void InitializeCommonLogic()
         {
-            // Set the ItemsSource for the ListBox.
-            // This collection will be manipulated by Add/Remove Group buttons.
-            // Crucially, it should be initialized from ResultCredential.Groups.
-            // Ensure ResultCredential is already set by the time this is called.
-            _uiGroupNames = new ObservableCollection<string>(ResultCredential.Groups); // Initialize from ResultCredential's groups
-            LbGroups.ItemsSource = _uiGroupNames; // Bind to this UI-specific collection
-
-            UpdateButtonStates(); // Initial state of buttons
+            _uiGroupNames = new ObservableCollection<string>(ResultCredential.Groups);
+            LbGroups.ItemsSource = _uiGroupNames;
+            _uiGroupNames.CollectionChanged += UiGroupNames_CollectionChanged;
 
             _adService = new ADSourceCheckService();
             _adService.OnOutputMessage += HandleOutputMessage;
-            _uiGroupNames.CollectionChanged += UiGroupNames_CollectionChanged;
+
+            ResetInputRelatedUIState();
         }
 
         private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -273,21 +269,22 @@ namespace AD_User_Reset_Print.Views
             this.Close();
         }
 
-        private void InputChanged()
+        private void ResetInputRelatedUIState()
         {
             _lastTestSuccessful = false;
-            UpdateButtonStates();
-            // Clear the test result indicator immediately
-            BtnTestConnection.Background = new SolidColorBrush(Colors.LightGray);
+            // Reset test button color
+            BtnTestConnection.Background = SystemColors.ControlBrush; // Default button color
+            BtnTestConnection.Foreground = SystemColors.ControlTextBrush; // Default text color
             txtOutput.Text = ""; // Clear output on input change
+            BtnConnection.IsEnabled = false; // Disable 'Connect/Save' until a new test passes
+            UpdateButtonStates(); // For add/remove group buttons
         }
 
-        private void TxtbDomain_TextChanged(object sender, TextChangedEventArgs e) { InputChanged(); }
+        private void Input_TextChanged(object sender, RoutedEventArgs e)
+        {
+            ResetInputRelatedUIState();
+        }
 
-        private void TxtbUsername_TextChanged(object sender, TextChangedEventArgs e) { InputChanged(); }
-
-        private void PswbPassword_PasswordChanged(object sender, RoutedEventArgs e) { InputChanged(); }
-        
-        private void UiGroupNames_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) { InputChanged(); }
+        private void UiGroupNames_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) { ResetInputRelatedUIState(); }
     }
 }

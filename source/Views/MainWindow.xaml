@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AD_User_Reset_Print.Views"
-        mc:Ignorable="d"
+        xmlns:models="clr-namespace:AD_User_Reset_Print.Models" mc:Ignorable="d"
         Title="AD-USER-RESET-PRINT"
         Height="600"
         Width="800"
@@ -12,38 +12,65 @@
         WindowStartupLocation="CenterScreen">
     <Border Background="AliceBlue" BorderBrush="LightGray" BorderThickness="2" MouseLeftButtonDown="Window_MouseLeftButtonDown">
         <Grid>
-            <Button x:Name="btnADSettings" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnADSettings_Click">
+            <Button x:Name="btnADSettings" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnADSettings_Click">
                 <Image Source="/Resources/Icons/data-storage.png"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
-            <Button x:Name="btnUISettings" HorizontalAlignment="Left" Margin="70,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnUISettings_Click">
+            <Button x:Name="btnUISettings" HorizontalAlignment="Left" Margin="70,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnUISettings_Click">
                 <Image Source="/Resources/Icons/reglages.png"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
-            <Button x:Name="btnHelp" HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnHelp_Click">
+            <Button x:Name="btnHelp" HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnHelp_Click">
                 <Image Source="/Resources/Icons/question.png"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
-            <Button x:Name="btnResetPsw" HorizontalAlignment="Left" Margin="190,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnResetPsw_Click">
+            <Button x:Name="btnResetPsw" HorizontalAlignment="Left" Margin="190,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnResetPsw_Click">
                 <Image Source="/Resources/Icons/reset-password.png"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
-            <Button x:Name="btnPrint" HorizontalAlignment="Left" Margin="250,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnPrint_Click">
+            <Button x:Name="btnPrint" HorizontalAlignment="Left" Margin="250,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnPrint_Click">
                 <Image Source="/Resources/Icons/printer.png"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
-            <Button x:Name="btnSync" HorizontalAlignment="Left" Margin="310,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnSync_Click">
+            <Button x:Name="btnSync" HorizontalAlignment="Left" Margin="310,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnSync_Click">
                 <Image Source="/Resources/Icons/rafraichir.png"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
             <ProgressBar x:Name="pbUserSync" HorizontalAlignment="Stretch" Margin="370,10,10,0" VerticalAlignment="Top" Height="40"/>
             <Label x:Name="lblUserSyncTime" Content="Dernière Sync. : dd.mm.yyyy hh:mm:ss " Margin="370,10,32,0" VerticalAlignment="Top" FontSize="20" Height="40"/>
-            <Button x:Name="btnFilter" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="btnFilter_Click">
+            <Button x:Name="btnFilter" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnFilter_Click">
                 <Image Source="/Resources/Icons/filtre.png"
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
             <TextBox x:Name="txtbSearch" HorizontalAlignment="Stretch" Margin="70,70,10,0" TextWrapping="Wrap" Text="TextBox" FontSize="20" TextAlignment="Center" VerticalContentAlignment="Center" Height="40"/>
-            <ListBox d:ItemsSource="{d:SampleData ItemCount=5}" Margin="10,130,10,10" FontSize="20"/>
+
+            <ListBox x:Name="lbUsers" Margin="10,130,10,10" FontSize="20" SelectionChanged="LbUsers_SelectionChanged" MouseDoubleClick="LbUsers_MouseDoubleClick" ItemsSource="{Binding Users}">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <EventSetter Event="MouseRightButtonUp" Handler="ListBoxItem_MouseRightButtonUp"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:User}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding DisplayName}" FontWeight="Bold"/>
+                            <TextBlock Text=" (" Margin="5,0,0,0"/>
+                            <TextBlock Text="{Binding SAMAccountName}"/>
+                            <TextBlock Text=")"/>
+                            <TextBlock Text=" - " Margin="5,0,0,0"/>
+                            <TextBlock Text="{Binding Domain}" FontStyle="Italic"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                <ListBox.ContextMenu>
+                    <ContextMenu x:Name="UserContextMenu">
+                        <MenuItem Header="Reset" Click="ResetMenuItem_Click"/>
+                        <MenuItem Header="Print" Click="PrintMenuItem_Click"/>
+                        <MenuItem Header="Reset and Print" Click="ResetAndPrintMenuItem_Click"/>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
+            
             <Button x:Name="BtnReset" Content="Reset" HorizontalAlignment="Left" Margin="545,390,0,0" VerticalAlignment="Top" Height="141" Width="174" FontSize="48" Click="BtnReset_Click"/>
         </Grid>
     </Border>

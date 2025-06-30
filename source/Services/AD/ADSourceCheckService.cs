@@ -9,7 +9,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Threading.Tasks;
 
-namespace AD_User_Reset_Print.Services
+namespace AD_User_Reset_Print.Services.AD
 {
     public class ADSourceCheckService
     {
@@ -117,7 +117,7 @@ namespace AD_User_Reset_Print.Services
                                     string name = sid.Translate(typeof(NTAccount)).ToString();
                                     OnOutputMessage?.Invoke($"  - SID: {sid.Value} ({name})");
                                 }
-                                catch (System.Security.Principal.IdentityNotMappedException)
+                                catch (IdentityNotMappedException)
                                 {
                                     OnOutputMessage?.Invoke($"  - SID: {sid.Value} (Cannot map to NTAccount - e.g., WellKnown SID or foreign domain)");
                                 }

@@ -3,11 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:AD_User_Reset_Print.Views"
-        mc:Ignorable="d"
+        xmlns:models="clr-namespace:AD_User_Reset_Print.Models" mc:Ignorable="d"
         Title="SingleAccountDetails" Height="300" Width="500">
     <Grid>
-        <Label Content="Serv" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblDomain" Content="Domain:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtDomain" HorizontalAlignment="Left" Margin="121,14,0,0" TextWrapping="Wrap" Text="{Binding Domain}" VerticalAlignment="Top" Width="134" IsReadOnly="True"/>
+
         <Separator HorizontalAlignment="Center" Margin="0,34,0,0" VerticalAlignment="Top" Height="17" RenderTransformOrigin="0.5,0.5" Width="500">
             <Separator.RenderTransform>
                 <TransformGroup>
@@ -18,21 +19,29 @@
                 </TransformGroup>
             </Separator.RenderTransform>
         </Separator>
-        <Label x:Name="label1" Content="Label1" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="label2" Content="Label2" HorizontalAlignment="Left" Margin="10,83,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="label3" Content="Label3" HorizontalAlignment="Left" Margin="10,114,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="label4" Content="Label4" HorizontalAlignment="Left" Margin="10,145,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="label5" Content="Label5" HorizontalAlignment="Left" Margin="10,176,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="label6" Content="Label6" HorizontalAlignment="Left" Margin="10,207,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="label7" Content="Label7" HorizontalAlignment="Left" Margin="10,238,0,0" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Margin="121,56,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="134"/>
-        <TextBox HorizontalAlignment="Left" Margin="121,87,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="134"/>
-        <TextBox HorizontalAlignment="Left" Margin="121,118,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="134"/>
-        <TextBox HorizontalAlignment="Left" Margin="121,149,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="134"/>
-        <TextBox HorizontalAlignment="Left" Margin="121,180,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="134"/>
-        <TextBox HorizontalAlignment="Left" Margin="121,211,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="134"/>
-        <TextBox HorizontalAlignment="Left" Margin="121,242,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="134"/>
-        <Label Content="Groups" HorizontalAlignment="Left" Margin="274,52,0,0" VerticalAlignment="Top"/>
-        <ListBox d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="274,78,0,0" Width="200" Height="182"/>
+
+        <Label x:Name="lblSAMAccountName" Content="SAMAccountName:" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtSAMAccountName" HorizontalAlignment="Left" Margin="121,56,0,0" TextWrapping="Wrap" Text="{Binding SAMAccountName}" VerticalAlignment="Top" Width="134" IsReadOnly="True"/>
+
+        <Label x:Name="lblDisplayName" Content="DisplayName:" HorizontalAlignment="Left" Margin="10,83,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtDisplayName" HorizontalAlignment="Left" Margin="121,87,0,0" TextWrapping="Wrap" Text="{Binding DisplayName}" VerticalAlignment="Top" Width="134" IsReadOnly="True"/>
+
+        <Label x:Name="lblGivenName" Content="GivenName:" HorizontalAlignment="Left" Margin="10,114,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtGivenName" HorizontalAlignment="Left" Margin="121,118,0,0" TextWrapping="Wrap" Text="{Binding GivenName}" VerticalAlignment="Top" Width="134" IsReadOnly="True"/>
+
+        <Label x:Name="lblSn" Content="Sn:" HorizontalAlignment="Left" Margin="10,145,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtSn" HorizontalAlignment="Left" Margin="121,149,0,0" TextWrapping="Wrap" Text="{Binding Sn}" VerticalAlignment="Top" Width="134" IsReadOnly="True"/>
+
+        <Label x:Name="lblMail" Content="Mail:" HorizontalAlignment="Left" Margin="10,176,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtMail" HorizontalAlignment="Left" Margin="121,180,0,0" TextWrapping="Wrap" Text="{Binding Mail}" VerticalAlignment="Top" Width="134" IsReadOnly="True"/>
+
+        <Label x:Name="lblTitle" Content="Title:" HorizontalAlignment="Left" Margin="10,207,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtTitle" HorizontalAlignment="Left" Margin="121,211,0,0" TextWrapping="Wrap" Text="{Binding Title}" VerticalAlignment="Top" Width="134" IsReadOnly="True"/>
+
+        <Label x:Name="lblDescription" Content="Description:" HorizontalAlignment="Left" Margin="10,238,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtDescription" HorizontalAlignment="Left" Margin="121,242,0,0" TextWrapping="Wrap" Text="{Binding Description}" VerticalAlignment="Top" Width="134" IsReadOnly="True"/>
+
+        <Label Content="Groups:" HorizontalAlignment="Left" Margin="274,52,0,0" VerticalAlignment="Top"/>
+        <ListBox x:Name="lbUserGroups" ItemsSource="{Binding UserGroups}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="274,78,0,0" Width="200" Height="182" IsHitTestVisible="False"/>
     </Grid>
 </Window>
