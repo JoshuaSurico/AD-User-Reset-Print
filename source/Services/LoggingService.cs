@@ -1,54 +1,89 @@
-﻿using System;
+﻿// File: Services/LoggingService.cs
+using AD_User_Reset_Print.Models; // Assuming AppSettings is in Models
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+// Note: The InternalsVisibleTo attribute is typically placed in a single file like AssemblyInfo.cs
+// or directly in the .csproj file. If your project setup puts it in a service file,
+// ensure it's not duplicated across multiple service files unnecessarily.
+// For this example, I'll include it as you had it previously.
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("AD-User-Reset-Print.Tests")]
 
 namespace AD_User_Reset_Print.Services
 {
-    public enum LogLevel { Info, Warning, Error }
-
-    public static class LoggingService
+    // Implement the ILoggingService interface
+    public class LoggingService : ILoggingService
     {
-        private static readonly List<string> _logMessages = [];
-        private static readonly object _lock = new();
+        private readonly List<string> _logMessages = [];
+        private readonly object _lock = new();
+        private readonly string _logFilePath;
 
-        // Event that the LogsWindow will subscribe to
-        public static event Action<string> OnLogAdded;
+        public event Action<string> OnLogAdded;
+        public bool HasErrors { get; private set; }
 
-        public static bool HasErrors { get; private set; }
+        // Primary constructor: Uses AppSettings for the log directory
+        public LoggingService() : this(AppSettings.LogDirectory)
+        {
+        }
 
-        public static void Log(string message, LogLevel level = LogLevel.Info)
+        // Secondary constructor: Allows specifying the log directory (useful for testing)
+        // This is marked 'internal' so only your test project (and this assembly) can access it.
+        internal LoggingService(string logDirectory)
+        {
+            try
+            {
+                Directory.CreateDirectory(logDirectory);
+                _logFilePath = Path.Combine(logDirectory, $"log-{DateTime.Now:yyyy-MM-dd}.txt");
+
+                if (File.Exists(_logFilePath))
+                {
+                    _logMessages.AddRange(File.ReadAllLines(_logFilePath));
+                    if (_logMessages.Any(log => log.Contains("[ERROR]"))) HasErrors = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"CRITICAL FAILURE in LoggingService constructor: {ex.Message}");
+            }
+        }
+
+        public void Log(string message, LogLevel level = LogLevel.Info)
         {
             string formattedMessage = $"[{DateTime.Now:HH:mm:ss}] [{level.ToString().ToUpper()}]: {message}";
-
-            if (level == LogLevel.Error)
-            {
-                HasErrors = true;
-            }
+            if (level == LogLevel.Error) HasErrors = true;
 
             lock (_lock)
             {
                 _logMessages.Add(formattedMessage);
+                try
+                {
+                    File.AppendAllText(_logFilePath, formattedMessage + Environment.NewLine);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to write to log file {_logFilePath}: {ex.Message}");
+                }
             }
-
-            // Raise the event to notify any open log windows
             OnLogAdded?.Invoke(formattedMessage);
         }
 
-        public static IEnumerable<string> GetLogs()
+        public IEnumerable<string> GetLogs()
         {
             lock (_lock)
             {
-                return [.. _logMessages]; // Return a copy
+                return [.. _logMessages];
             }
         }
 
-        public static void Clear()
+        /// <summary>
+        /// Resets the HasErrors flag to false. Should be called before
+        /// starting a new user-initiated operation.
+        /// </summary>
+        public void ResetErrorFlag()
         {
             lock (_lock)
             {
-                _logMessages.Clear();
                 HasErrors = false;
             }
         }

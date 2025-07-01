@@ -10,50 +10,31 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\Icons\connection_20.png" />
     <None Remove="Resources\Icons\data-storage.png" />
-    <None Remove="Resources\Icons\data-storage_20.png" />
     <None Remove="Resources\Icons\filtre.png" />
-    <None Remove="Resources\Icons\filtre_20.png" />
     <None Remove="Resources\Icons\printer.png" />
-    <None Remove="Resources\Icons\printer_20.png" />
-    <None Remove="Resources\Icons\profil_20.png" />
     <None Remove="Resources\Icons\question.png" />
-    <None Remove="Resources\Icons\question_20.png" />
     <None Remove="Resources\Icons\rafraichir.png" />
-    <None Remove="Resources\Icons\rafraichir_20.png" />
     <None Remove="Resources\Icons\reglages.png" />
-    <None Remove="Resources\Icons\reglages_20.png" />
     <None Remove="Resources\Icons\reset-password.png" />
-    <None Remove="Resources\Icons\reset-password_20.png" />
-    <None Remove="Resources\Icons\search-file_20.png" />
     <None Remove="Resources\SplashScreen\gyre.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="9.0.6" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\Icons\connection_20.png" />
     <Resource Include="Resources\Icons\data-storage.png" />
-    <Resource Include="Resources\Icons\data-storage_20.png" />
     <Resource Include="Resources\Icons\filtre.png" />
-    <Resource Include="Resources\Icons\filtre_20.png" />
     <Resource Include="Resources\Icons\printer.png" />
-    <Resource Include="Resources\Icons\printer_20.png" />
-    <Resource Include="Resources\Icons\profil_20.png" />
     <Resource Include="Resources\Icons\question.png" />
-    <Resource Include="Resources\Icons\question_20.png" />
     <Resource Include="Resources\Icons\rafraichir.png" />
-    <Resource Include="Resources\Icons\rafraichir_20.png" />
     <Resource Include="Resources\Icons\reglages.png" />
-    <Resource Include="Resources\Icons\reglages_20.png" />
     <Resource Include="Resources\Icons\reset-password.png" />
-    <Resource Include="Resources\Icons\reset-password_20.png" />
-    <Resource Include="Resources\Icons\search-file_20.png" />
   </ItemGroup>
 
   <ItemGroup>

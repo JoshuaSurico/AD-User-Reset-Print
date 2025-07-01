@@ -1,5 +1,8 @@
 ﻿using AD_User_Reset_Print.Views;
 using AD_User_Reset_Print.Services;
+using AD_User_Reset_Print.Services.AD;
+using Microsoft.Extensions.DependencyInjection;
+using System; // Required for IServiceProvider
 using System.Configuration;
 using System.Data;
 using System.Windows;
@@ -11,58 +14,85 @@ namespace AD_User_Reset_Print
     /// </summary>
     public partial class App : Application
     {
+        public IServiceProvider ServiceProvider { get; private set; } = null!;
+
         public App()
         {
-
+            // Constructor is fine being empty here, as OnStartup handles the DI setup.
         }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            // 1. Always open the MainWindow first
-            MainWindow mainWindow = new();
+            var serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection);
+            ServiceProvider = serviceCollection.BuildServiceProvider();
+
+            var logger = ServiceProvider.GetRequiredService<ILoggingService>();
+            logger.Log("Application startup initiated.");
+
+            var credentialStorageService = ServiceProvider.GetRequiredService<ICredentialStorageService>();
+
+            // Always open the MainWindow first.
+            var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
+            logger.Log("MainWindow displayed.");
 
-            // 2. Check if any credentials are saved using the static method
-            while (!CredentialStorageService.AreCredentialsSaved())
+            // Initial check for credentials at startup.
+            // This now relies on the ADSourcesWindow's DialogResult and its internal logic.
+            if (!credentialStorageService.AreCredentialsSaved())
             {
-                // 3. If no credentials, open ADSourcesWindow on top as a modal dialog
-                ADSourcesWindow adSources = new()
-                {
-                    Owner = mainWindow
-                };
+                logger.Log("No AD credentials found on initial startup. Opening ADSourcesWindow for configuration.", LogLevel.Warning);
 
+                // Call the helper method to prompt for credentials
+                // This helper method will handle the loop and shutdown if necessary.
+                PromptForCredentials(mainWindow, logger, credentialStorageService);
+            }
+
+            logger.Log("Application startup complete. Credentials are configured (or user chose to exit).", LogLevel.Info);
+        }
+
+        /// <summary>
+        /// Prompts the user to configure credentials if none are saved.
+        /// This method is called repeatedly until credentials are saved or the user chooses to exit.
+        /// It relies on ADSourcesWindow's internal Closing event logic.
+        /// </summary>
+        private void PromptForCredentials(Window owner, ILoggingService logger, ICredentialStorageService credentialStorageService)
+        {
+            while (!credentialStorageService.AreCredentialsSaved())
+            {
+                var adSources = ServiceProvider.GetRequiredService<ADSourcesWindow>();
+                adSources.Owner = owner;
+
+                // ShowDialog will return null if the window is closed via the 'X' button or system menu,
+                // or true/false based on DialogResult set internally.
                 bool? result = adSources.ShowDialog();
 
-                // If result is true, it means credentials were saved, so the loop will exit on the next check.
-                // If result is false or null, it means the user closed the ADSourcesWindow without saving.
-                if (result == false || result == null) // User cancelled or closed the config window
+                // If result is false (user chose to exit from ADSourcesWindow's prompt)
+                if (result == false)
                 {
-                    CustomMessageBox customMsgBox = new(
-                        "Aucune information d'identification AD n'a été configurée. L'application nécessite des informations d'identification pour fonctionner correctement.\n\n" +
-                        "Voulez-vous les configurer maintenant ? (Cliquez sur 'Non' pour quitter l'application)",
-                        "Configuration Requise",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question
-                    )
-                    { 
-                        Owner = mainWindow 
-                    };
-
-                    bool? customDialogResult = customMsgBox.ShowDialog(); // Show your custom dialog
-
-                    if (customDialogResult == true) // User clicked 'Oui' (Yes)
-                    {
-                        // Loop will repeat
-                    }
-                    else // User clicked 'Non' (No) or closed the custom dialog
-                    {
-                        Application.Current.Shutdown();
-                        return;
-                    }
+                    logger.Log("User chose to exit application from ADSourcesWindow due to unconfigured AD credentials.", LogLevel.Info);
+                    Application.Current.Shutdown();
+                    return; // Exit this method and stop further startup
                 }
             }
+        }
+
+        private static void ConfigureServices(IServiceCollection services)
+        {
+            // Core Services (usually Singletons if they manage app-wide state or resources)
+            services.AddSingleton<ILoggingService, LoggingService>();
+            services.AddSingleton<ICredentialStorageService, CredentialStorageService>();
+            services.AddSingleton<IPasswordResetService, PasswordResetService>();
+            services.AddTransient<ISynchronizeUserService, SynchronizeUserService>();
+            services.AddTransient<IADSourceCheckService, ADSourceCheckService>();
+
+            // UI Windows (usually Transient, as new instances are created per request)
+            services.AddSingleton<MainWindow>();
+            services.AddTransient<LogsWindow>();
+            services.AddTransient<ADSourcesWindow>();
+            services.AddTransient<ADSourceConfigWindow>();
         }
     }
 }

@@ -40,7 +40,7 @@
 
             <ProgressBar x:Name="pbUserSync" HorizontalAlignment="Stretch" Margin="370,10,10,0" VerticalAlignment="Top" Height="40"/>
             <Label x:Name="lblUserSync" Content="Dernière Sync. : dd.mm.yyyy hh:mm:ss " Margin="370,10,32,0" VerticalAlignment="Top" FontSize="20" Height="40"/>
-            <Button x:Name="btnViewLogs" Content="Logs" Margin="0,10,10,0" Visibility="Collapsed" VerticalAlignment="Top" Height="40" Width="40" Background="OrangeRed" Click="BtnViewLogs_Click" HorizontalAlignment="Right">
+            <Button x:Name="btnViewLogs" Content="Logs" Margin="0,10,10,0" VerticalAlignment="Top" Height="40" Width="40" Background="OrangeRed" Click="BtnViewLogs_Click" HorizontalAlignment="Right">
                 <!--<Image Source="/Resources/Icons/logs.png"
                        RenderOptions.BitmapScalingMode="HighQuality"/>-->
             </Button>
@@ -50,7 +50,7 @@
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
 
-            <TextBox x:Name="txtbSearch" Margin="0,70,10,0" TextWrapping="Wrap" Text="" FontSize="20"  TextAlignment="Center" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="716" Height="40" VerticalAlignment="Top"/>
+            <TextBox x:Name="txtbSearch" Margin="0,70,10,0" TextWrapping="Wrap" Text="" FontSize="20" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="716" Height="40" VerticalAlignment="Top"/>
 
             <ListBox x:Name="lbUsers" Margin="10,130,10,10" FontSize="20" SelectionChanged="LbUsers_SelectionChanged" MouseDoubleClick="LbUsers_MouseDoubleClick" ItemsSource="{Binding Users}">
                 <ListBox.ItemContainerStyle>

@@ -23,7 +23,7 @@
             <Button x:Name="btnRemove" Content="Enlever" HorizontalAlignment="Center" Margin="0,52,0,0" VerticalAlignment="Top" FontSize="20" Width="140" Click="BtnRemove_Click"/>
             <Button x:Name="btnModify" Content="Modifier" HorizontalAlignment="Left" Margin="348,52,0,0" VerticalAlignment="Top" FontSize="20" Width="140" Click="BtnModify_Click"/>
 
-            <ListBox x:Name="lbADSources" ItemsSource="{Binding AdSourceList}"  d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,88,0,0" Width="480" Height="187" FontSize="20" SelectionChanged="lbADSources_SelectionChanged">
+            <ListBox x:Name="lbADSources" ItemsSource="{Binding AdSourceList}"  d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,88,0,0" Width="480" Height="187" FontSize="20" SelectionChanged="LbADSources_SelectionChanged">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
@@ -35,7 +35,7 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <Button x:Name="btnClose" Content="Fermer" HorizontalAlignment="Center" Margin="0,280,0,0" VerticalAlignment="Top" FontSize="20" Width="476" Click="btnClose_Click"/>
+            <Button x:Name="btnClose" Content="Fermer" HorizontalAlignment="Center" Margin="0,280,0,0" VerticalAlignment="Top" FontSize="20" Width="476" Click="BtnClose_Click"/>
         </Grid>
     </Border>
 </Window>

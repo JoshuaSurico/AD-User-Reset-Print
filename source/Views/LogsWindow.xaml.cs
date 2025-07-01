@@ -20,9 +20,14 @@ namespace AD_User_Reset_Print.Views
     /// </summary>
     public partial class LogsWindow : Window
     {
-        public LogsWindow()
+        private readonly ILoggingService _logger;
+
+        public LogsWindow(ILoggingService logger)
         {
             InitializeComponent();
+
+            _logger = logger;
+
             this.Loaded += LogsWindow_Loaded;
             this.Closed += LogsWindow_Closed;
         }
@@ -30,11 +35,11 @@ namespace AD_User_Reset_Print.Views
         private void LogsWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Populate with existing logs when the window opens
-            txtLogDisplay.Text = string.Join("\n", LoggingService.GetLogs());
+            txtLogDisplay.Text = string.Join("\n", _logger.GetLogs());
             txtLogDisplay.ScrollToEnd();
 
             // Subscribe to receive new logs while the window is open
-            LoggingService.OnLogAdded += HandleLogAdded;
+            _logger.OnLogAdded += HandleLogAdded;
         }
 
         private void HandleLogAdded(string logMessage)
@@ -50,17 +55,12 @@ namespace AD_User_Reset_Print.Views
         private void LogsWindow_Closed(object sender, System.EventArgs e)
         {
             // IMPORTANT: Unsubscribe to prevent memory leaks
-            LoggingService.OnLogAdded -= HandleLogAdded;
+            _logger.OnLogAdded -= HandleLogAdded;
         }
 
         private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(txtLogDisplay.Text);
-        }
-
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
         }
     }
 }

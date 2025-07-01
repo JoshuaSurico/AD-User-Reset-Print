@@ -1,20 +1,10 @@
 ﻿using AD_User_Reset_Print.Models;
 using AD_User_Reset_Print.Services;
-using AD_User_Reset_Print.Views;
-using System;
-using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace AD_User_Reset_Print.Views
 {
@@ -27,12 +17,21 @@ namespace AD_User_Reset_Print.Views
         private Point _lastKnownLocation;
         public ObservableCollection<CredentialEntry> AdSourceList { get; set; }
 
-        public ADSourcesWindow()
+        private readonly ILoggingService _logger;
+        private readonly ICredentialStorageService _credentialStorageService;
+        private readonly IServiceProvider _serviceProvider;
+
+        public ADSourcesWindow(ILoggingService logger, ICredentialStorageService credentialStorageService, IServiceProvider serviceProvider)
         {
             InitializeComponent();
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
-            // Initialize last known location
+            // Assign injected services to readonly fields
+            _logger = logger;
+            _credentialStorageService = credentialStorageService;
+            _serviceProvider = serviceProvider; // Assign the injected service provider
+
+            // Initialize last known location after window position is determined
             _lastKnownLocation = new Point(this.Left, this.Top);
 
             AdSourceList = [];
@@ -41,6 +40,7 @@ namespace AD_User_Reset_Print.Views
             UpdateButtonStates();
 
             this.DataContext = this;
+            this.Closing += ADSourcesWindow_Closing;
         }
 
         private void Window_LocationChanged(object sender, EventArgs e)
@@ -73,7 +73,7 @@ namespace AD_User_Reset_Print.Views
         private void LoadAdSources()
         {
             AdSourceList.Clear();
-            List<CredentialEntry> loaded = CredentialStorageService.LoadCredentials();
+            List<CredentialEntry> loaded = _credentialStorageService.LoadCredentials();
             foreach (var item in loaded)
             {
                 AdSourceList.Add(item);
@@ -82,7 +82,7 @@ namespace AD_User_Reset_Print.Views
 
         private void SaveAdSources()
         {
-            CredentialStorageService.SaveCredentials(AdSourceList.ToList());
+            _credentialStorageService.SaveCredentials([.. AdSourceList]);
         }
 
         // Central method to update button states
@@ -91,15 +91,12 @@ namespace AD_User_Reset_Print.Views
             // Activate btnRemove and btnModify only when an item is selected in lbGroups
             btnRemove.IsEnabled = lbADSources.SelectedItem != null;
             btnModify.IsEnabled = lbADSources.SelectedItem != null;
-
         }
 
         private void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
-            ADSourceConfigWindow configWindow = new()
-            {
-                Owner = this // Set owner to ADSourceManagerWindow
-            };
+            ADSourceConfigWindow configWindow = _serviceProvider.GetRequiredService<ADSourceConfigWindow>();
+            configWindow.Owner = this;
 
             bool? result = configWindow.ShowDialog();
 
@@ -117,16 +114,27 @@ namespace AD_User_Reset_Print.Views
 
         private void BtnRemove_Click(object sender, RoutedEventArgs e)
         {
-            CredentialEntry selectedSource = (CredentialEntry)lbADSources.SelectedItem;
+            CredentialEntry? selectedSource = (CredentialEntry?)lbADSources.SelectedItem; // Changed to nullable
 
             if (selectedSource != null)
             {
-                if (MessageBox.Show($"Are you sure you want to remove '{selectedSource.Domain} - {selectedSource.Username}'?",
-                                    "Confirm Removal", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                // Using CustomMessageBox instead of System.Windows.MessageBox
+                CustomMessageBox confirmBox = new(
+                    $"Are you sure you want to remove '{selectedSource.Domain} - {selectedSource.Username}'?",
+                    "Confirm Removal",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning
+                )
+                {
+                    Owner = this // Set owner for the message box
+                };
+
+                if (confirmBox.ShowDialog() == true) // CustomMessageBox returns true for Yes
                 {
                     AdSourceList.Remove(selectedSource); // Remove from the collection
                     SaveAdSources(); // Save the updated list to file
                     MessageBox.Show("AD Source removed.");
+                    UpdateButtonStates(); // Update buttons after removal
                 }
             }
             else
@@ -141,27 +149,31 @@ namespace AD_User_Reset_Print.Views
 
             if (selectedSource != null)
             {
-                // Pass the selected credential to the config window
-                // Ensure CredentialEntry implements INotifyPropertyChanged for seamless updates
-                // Or, if not, update the item in the ObservableCollection explicitly after dialog returns.
-                ADSourceConfigWindow configWindow = new(selectedSource)
-                {
-                    Owner = this
-                };
+                // 1. Resolve the window from the service provider
+                ADSourceConfigWindow configWindow = _serviceProvider.GetRequiredService<ADSourceConfigWindow>();
+                // 2. Set the owner
+                configWindow.Owner = this;
+                // 3. Pass the specific data using the new method
+                configWindow.SetCredentialToModify(selectedSource);
 
                 bool? result = configWindow.ShowDialog();
 
-                if (result == true) // If user clicked "Test Connection" and it succeeded
+                if (result == true)
                 {
-                    // If CredentialEntry implements INotifyPropertyChanged, UI might update automatically.
-                    // If not, or to be safe, you can replace the item to force UI refresh:
-                    int index = AdSourceList.IndexOf(selectedSource);
-                    if (index != -1)
+                    CredentialEntry? modifiedEntry = configWindow.ResultCredential;
+                    if (modifiedEntry != null)
                     {
-                        AdSourceList.RemoveAt(index);
-                        AdSourceList.Insert(index, configWindow.ResultCredential);
+                        var originalEntry = AdSourceList.FirstOrDefault(c => c == selectedSource); // Find the exact instance
+                        if (originalEntry != null)
+                        {
+                            int index = AdSourceList.IndexOf(originalEntry);
+                            if (index != -1)
+                            {
+                                AdSourceList[index] = modifiedEntry;
+                            }
+                        }
                     }
-                    SaveAdSources(); // Save the updated list to file
+                    SaveAdSources();
                     MessageBox.Show("AD Source updated successfully!");
                 }
             }
@@ -171,22 +183,54 @@ namespace AD_User_Reset_Print.Views
             }
         }
 
-        private void lbADSources_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void LbADSources_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             UpdateButtonStates();
         }
 
-        private void btnClose_Click(object sender, RoutedEventArgs e)
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
-            if (CredentialStorageService.AreCredentialsSaved())
-            {
-                this.DialogResult = true;
-            }
-            else
-            {
-                this.DialogResult = false;
-            }
             this.Close();
+        }
+
+        /// <summary>
+        /// Handles the window's Closing event to prompt the user if no credentials are saved.
+        /// </summary>
+        private void ADSourcesWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // If the user is actively saving, don't interfere
+            if (_credentialStorageService.AreCredentialsSaved())
+            {
+                this.DialogResult = true; // Signal success if credentials are saved
+                return;
+            }
+
+            // If no credentials are saved, show the warning message box
+            _logger.Log("ADSourcesWindow is closing with no credentials saved. Prompting user.", LogLevel.Warning);
+
+            CustomMessageBox customMsgBox = new(
+                "Aucune information d'identification AD n'a été configurée. L'application nécessite des informations d'identification pour fonctionner correctement.\n\n" +
+                "Voulez-vous les configurer maintenant ? (Cliquez sur 'Non' pour quitter l'application)",
+                "Configuration Requise",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question
+            )
+            {
+                Owner = this // Set owner for the message box
+            };
+
+            bool? customDialogResult = customMsgBox.ShowDialog();
+
+            if (customDialogResult == true) // User clicked 'Oui' (Yes)
+            {
+                _logger.Log("User chose to re-configure AD credentials.", LogLevel.Info);
+                e.Cancel = true; // Cancel the closing, keeping the window open
+            }
+            else // User clicked 'Non' (No) or closed the custom dialog
+            {
+                _logger.Log("User chose to exit application due to unconfigured AD credentials.", LogLevel.Info);
+                this.DialogResult = false; // Signal failure to the caller
+            }
         }
     }
 }
