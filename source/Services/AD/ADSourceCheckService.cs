@@ -1,22 +1,16 @@
 ﻿// File: Services.AD/ADSourceCheckService.cs
 using AD_User_Reset_Print.Models;
-using AD_User_Reset_Print.Services; // Assuming ILoggingService and ISourceCheckService are here
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
-using System.Linq;
-using System.Net.NetworkInformation;
 using System.Runtime.InteropServices; // For Marshal
 using System.Security; // For SecureString
 using System.Security.AccessControl;
 using System.Security.Principal;
-using System.Threading.Tasks;
 
 namespace AD_User_Reset_Print.Services.AD
 {
-    public class ADSourceCheckService : IADSourceCheckService // Corrected class name and interface
+    public class ADSourceCheckService : IADSourceCheckService
     {
         private readonly ILoggingService _logger;
 
@@ -71,11 +65,6 @@ namespace AD_User_Reset_Print.Services.AD
                     domainRootEntry?.Dispose();
                     userEntry?.Dispose();
                 });
-
-                if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                {
-                    result.IsSuccessful = false;
-                }
             }
             catch (Exception ex)
             {
@@ -102,39 +91,37 @@ namespace AD_User_Reset_Print.Services.AD
             domainRootEntry = null;
             userEntry = null;
 
-            LogAndOutput($"\n--- Phase 1: Domain and User Validation ---");
-            LogAndOutput($"Attempting to ping domain controller at '{domain}'...");
-            if (!IsDomainReachable(domain))
-            {
-                LogAndOutput($"Warning: Domain controller for '{domain}' is not reachable via Ping. Proceeding with LDAP connection attempt...", LogLevel.Warning);
-            }
-            else
-            {
-                LogAndOutput($"Successfully pinged domain controller at '{domain}'.");
-            }
-
             try
             {
                 LogAndOutput($"Attempting to bind to domain '{domain}' with user '{username}'...");
                 domainRootEntry = new DirectoryEntry($"LDAP://{domain}", username, password ?? "", AuthenticationTypes.Secure);
+
+                // Force bind by accessing a property
+                var _ = domainRootEntry.Properties["distinguishedName"].Value;
+
                 LogAndOutput($"Successfully bound to domain root: {domainRootEntry.Properties["distinguishedName"].Value ?? "N/A"}.");
             }
-            catch (DirectoryServicesCOMException dse)
+            catch (System.Runtime.InteropServices.COMException comEx) // This will now catch all COMExceptions, including DirectoryServicesCOMException
             {
-                string msg = dse.ErrorCode switch
+                string msg = comEx.ErrorCode switch
                 {
-                    -2147023570 => $"Error: Authentication failed for user '{username}'. Please check credentials. (Code: 0x{dse.ErrorCode:X})",
-                    -2147016646 => $"Error: The AD server for '{domain}' is not operational or firewalled. (Code: 0x{dse.ErrorCode:X})",
-                    _ => $"Error: AD Binding Error: {dse.Message} (Code: 0x{dse.ErrorCode:X})",
+                    // 0x8007052E (Authentication failed)
+                    -2147023570 => $"Error: Authentication failed for user '{username}'. Please check credentials. (Code: 0x{comEx.ErrorCode:X})",
+                    // 0x8007203A (The server is not operational)
+                    -2147016646 => $"Error: The AD server for '{domain}' is not operational or firewalled. (Code: 0x{comEx.ErrorCode:X})",
+                    _ => $"Error: AD Connection Error (COM) for domain '{domain}': {comEx.Message} (Code: 0x{comEx.ErrorCode:X}). This often indicates a network issue or the domain controller being unreachable.",// Fallback for other COM exceptions, now including the domain for better context.
                 };
                 LogAndOutput(msg, LogLevel.Error);
                 result.ErrorMessage = msg;
                 domainRootEntry?.Dispose();
                 return false;
             }
-            catch (Exception ex)
+            catch (Exception ex) // General fallback for any other unexpected exceptions
             {
+                string msg = $"Error: An unexpected error occurred during initial AD connection for domain '{domain}': {ex.Message}";
                 LogAndOutput(ex.ToString(), LogLevel.Error);
+                result.ErrorMessage = msg;
+                domainRootEntry?.Dispose();
                 return false;
             }
 
@@ -301,21 +288,6 @@ namespace AD_User_Reset_Print.Services.AD
                         .Replace("(", "\\28")
                         .Replace(")", "\\29")
                         .Replace("\0", "\\00");
-        }
-
-        private bool IsDomainReachable(string domain)
-        {
-            try
-            {
-                using var pingSender = new Ping();
-                PingReply reply = pingSender.Send(domain, 2000);
-                return reply.Status == IPStatus.Success;
-            }
-            catch (Exception ex)
-            {
-                LogAndOutput($"Info: Ping to '{domain}' failed: {ex.Message}.", LogLevel.Info);
-                return false;
-            }
         }
 
         private static DirectoryEntry? FindADObject(DirectoryEntry domainRootEntry, string sAMAccountName, string objectCategory)

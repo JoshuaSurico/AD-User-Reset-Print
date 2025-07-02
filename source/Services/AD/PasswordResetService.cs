@@ -1,11 +1,7 @@
 ﻿// File: Services.AD/PasswordResetService.cs
 using AD_User_Reset_Print.Models;
-using AD_User_Reset_Print.Services; // For ILoggingService, LogLevel, ICredentialStorageService, CredentialEntry
-using System;
 using System.DirectoryServices.AccountManagement; // For AD interaction
 using System.Globalization; // Needed for CultureInfo
-using System.Linq; // For .Any() and .FirstOrDefault()
-using System.Security; // For SecureString
 using System.Runtime.InteropServices; // For SecureString to string conversion (Marshal)
 
 namespace AD_User_Reset_Print.Services.AD

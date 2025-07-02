@@ -1,13 +1,11 @@
 ﻿using AD_User_Reset_Print.Models;
-using System;
-using System.Windows;
-using System.Windows.Shapes;
-using System.Windows.Documents;
-using System.Printing;
-using System.Windows.Controls;
-using System.Globalization;
-using System.Windows.Media;
 using AD_User_Reset_Print.Views;
+using System.Printing;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace AD_User_Reset_Print.Services
 {

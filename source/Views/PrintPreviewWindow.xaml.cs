@@ -1,9 +1,7 @@
-﻿using System.IO; // Required for MemoryStream
-using System.Printing;
+﻿using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Xps.Packaging; // Required for XpsDocument
 
 namespace AD_User_Reset_Print.Views
 {

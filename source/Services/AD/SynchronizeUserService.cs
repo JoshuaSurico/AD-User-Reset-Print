@@ -1,15 +1,9 @@
 ﻿// File: Services.AD/SynchronizeUserService.cs
 using AD_User_Reset_Print.Models;
-using AD_User_Reset_Print.Services; // For ILoggingService, LogLevel, ICredentialStorageService, CredentialEntry, ProgressReport
-using System;
-using System.Collections.Generic;
 using System.DirectoryServices; // For DirectoryEntry, DirectorySearcher
-using System.DirectoryServices.AccountManagement;
 using System.IO; // For Directory.CreateDirectory
-using System.Linq;
 using System.Runtime.InteropServices; // For Marshal (SecureString to string conversion)
 using System.Security; // For SecureString
-using System.Threading.Tasks;
 
 namespace AD_User_Reset_Print.Services.AD
 {
@@ -17,17 +11,15 @@ namespace AD_User_Reset_Print.Services.AD
     public class SynchronizeUserService : ISynchronizeUserService
     {
         private readonly string _userListPath;
-        private readonly ILoggingService _logger; // Depend on interface
-        private readonly ICredentialStorageService _credentialStorageService; // Depend on interface
+        private readonly ILoggingService _logger;
+        private readonly ICredentialStorageService _credentialStorageService;
+        private readonly IJsonManagerService _jsonManagerService;
 
-        // Assumed AppSettings and JsonManagerService are available (either static or injected)
-        // If JsonManagerService needs to be injected, adjust constructor and interface.
-        // For now, assuming AppSettings is static and JsonManagerService.SaveToJson is static.
-
-        public SynchronizeUserService(ILoggingService logger, ICredentialStorageService credentialStorageService)
+        public SynchronizeUserService(ILoggingService logger, ICredentialStorageService credentialStorageService, IJsonManagerService jsonManagerService)
         {
             _logger = logger;
             _credentialStorageService = credentialStorageService;
+            _jsonManagerService = jsonManagerService;
 
             // Ensure the directory exists
             // This might be better placed in AppSettings or a dedicated config service
@@ -83,8 +75,6 @@ namespace AD_User_Reset_Print.Services.AD
                 groupProcessingTasks.Remove(finishedTask);
                 tasksCompleted++;
 
-                List<User>? userList = null; // Use nullable for safety
-
                 // Handle potential exceptions from the finished task
                 if (finishedTask.IsFaulted)
                 {
@@ -98,12 +88,9 @@ namespace AD_User_Reset_Print.Services.AD
                 }
                 else // Task completed successfully
                 {
-                    userList = await finishedTask; // Get the result from the already-completed task
+                    List<User>? userList = await finishedTask;
                     if (userList != null)
                     {
-                        // Add users, ensuring uniqueness to avoid duplicates from overlapping groups
-                        // This uses DistinctBy from System.Linq, available in .NET 6+
-                        // If targeting older .NET, you'd need a custom comparer or manual loop.
                         allUsers.AddRange(userList.Except(allUsers, new UserEqualityComparer())); // Avoid duplicates
                     }
                 }
@@ -126,8 +113,8 @@ namespace AD_User_Reset_Print.Services.AD
 
             progress.Report(new ProgressReport { PercentComplete = 95, CurrentActivity = "Finalizing and saving user list..." });
             // Remove duplicates again after adding all users from various groups
-            allUsers = allUsers.Distinct(new UserEqualityComparer()).ToList();
-            JsonManagerService.SaveToJson(allUsers, _userListPath);
+            allUsers = [.. allUsers.Distinct(new UserEqualityComparer())];
+            _jsonManagerService.SaveToJson(allUsers, _userListPath);
 
             progress.Report(new ProgressReport { PercentComplete = 100, CurrentActivity = $"Synchronization complete. Found {allUsers.Count} unique users." });
             return allUsers;
@@ -242,7 +229,7 @@ namespace AD_User_Reset_Print.Services.AD
             public bool Equals(User x, User y)
             {
                 if (ReferenceEquals(x, y)) return true;
-                if (ReferenceEquals(x, null) || ReferenceEquals(y, null)) return false;
+                if (x is null || y is null) return false;
                 // Consider users equal if their sAMAccountName and Domain match
                 return x.SAMAccountName == y.SAMAccountName && x.Domain == y.Domain;
             }

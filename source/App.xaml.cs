@@ -1,10 +1,7 @@
-﻿using AD_User_Reset_Print.Views;
-using AD_User_Reset_Print.Services;
+﻿using AD_User_Reset_Print.Services;
 using AD_User_Reset_Print.Services.AD;
+using AD_User_Reset_Print.Views;
 using Microsoft.Extensions.DependencyInjection;
-using System; // Required for IServiceProvider
-using System.Configuration;
-using System.Data;
 using System.Windows;
 
 namespace AD_User_Reset_Print
@@ -83,6 +80,7 @@ namespace AD_User_Reset_Print
         {
             // Core Services (usually Singletons if they manage app-wide state or resources)
             services.AddSingleton<ILoggingService, LoggingService>();
+            services.AddSingleton<IJsonManagerService, JsonManagerService>();
             services.AddSingleton<ICredentialStorageService, CredentialStorageService>();
             services.AddSingleton<IPasswordResetService, PasswordResetService>();
             services.AddTransient<ISynchronizeUserService, SynchronizeUserService>();

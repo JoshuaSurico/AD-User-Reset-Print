@@ -1,16 +1,13 @@
 ﻿using AD_User_Reset_Print.Models;
 using AD_User_Reset_Print.Services;
 using AD_User_Reset_Print.Services.AD;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Runtime.InteropServices;
 
 namespace AD_User_Reset_Print.Views
 {

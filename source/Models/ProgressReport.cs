@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AD_User_Reset_Print.Models
+﻿namespace AD_User_Reset_Print.Models
 {
     public class ProgressReport
     {

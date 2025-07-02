@@ -1,6 +1,5 @@
 ﻿// File: Services.AD/IPasswordResetService.cs
 using AD_User_Reset_Print.Models;
-using System;
 
 namespace AD_User_Reset_Print.Services.AD
 {

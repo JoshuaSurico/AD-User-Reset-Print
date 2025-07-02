@@ -1,6 +1,4 @@
 ﻿// File: Models/PermissionCheckResult.cs
-using System.Collections.Generic;
-
 namespace AD_User_Reset_Print.Models
 {
     public class PermissionCheckResult

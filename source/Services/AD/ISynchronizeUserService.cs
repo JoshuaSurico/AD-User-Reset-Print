@@ -1,8 +1,5 @@
 ﻿// File: Services.AD/ISynchronizeUserService.cs
 using AD_User_Reset_Print.Models; // Assuming User and ProgressReport models are here
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace AD_User_Reset_Print.Services.AD
 {

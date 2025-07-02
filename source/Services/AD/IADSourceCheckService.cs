@@ -1,7 +1,5 @@
 ﻿// File: Services.AD/IADSourceCheckService.cs
 using AD_User_Reset_Print.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace AD_User_Reset_Print.Services.AD
 {

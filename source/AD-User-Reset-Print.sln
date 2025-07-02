@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD-User-Reset-Print", "AD-U
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AD-User-Reset-Print.Tests", "..\AD-User-Reset-Print.Tests\AD-User-Reset-Print.Tests.csproj", "{1FDA5BAB-ED2B-417E-B37D-CF4A723521F7}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "AD-User-Reset-Print.SetupWizard", "..\AD-User-Reset-Print.SetupWizard\AD-User-Reset-Print.SetupWizard.vdproj", "{D11ED004-CA22-735A-70DA-A15E0E9035A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,8 @@ Global
 		{1FDA5BAB-ED2B-417E-B37D-CF4A723521F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FDA5BAB-ED2B-417E-B37D-CF4A723521F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FDA5BAB-ED2B-417E-B37D-CF4A723521F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D11ED004-CA22-735A-70DA-A15E0E9035A8}.Debug|Any CPU.ActiveCfg = Debug
+		{D11ED004-CA22-735A-70DA-A15E0E9035A8}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

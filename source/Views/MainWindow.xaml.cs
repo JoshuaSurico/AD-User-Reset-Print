@@ -1,13 +1,13 @@
 ﻿using AD_User_Reset_Print.Models;
 using AD_User_Reset_Print.Services;
 using AD_User_Reset_Print.Services.AD;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace AD_User_Reset_Print.Views
 {
@@ -24,9 +24,10 @@ namespace AD_User_Reset_Print.Views
         private readonly IPasswordResetService _passwordResetService;
         private readonly ICredentialStorageService _credentialStorageService;
         private readonly ISynchronizeUserService _synchronizeUserService;
+        private readonly IJsonManagerService _jsonManagerService;
         private readonly IServiceProvider _serviceProvider; // To resolve other windows
 
-        public MainWindow(ILoggingService loggingService, IPasswordResetService passwordResetService, ICredentialStorageService credentialStorageService, ISynchronizeUserService synchronizeUserService, IServiceProvider serviceProvider)
+        public MainWindow(ILoggingService loggingService, IPasswordResetService passwordResetService, ICredentialStorageService credentialStorageService, ISynchronizeUserService synchronizeUserService, IJsonManagerService jsonManagerService, IServiceProvider serviceProvider)
         {
             InitializeComponent();
             this.DataContext = this;
@@ -37,6 +38,7 @@ namespace AD_User_Reset_Print.Views
             _passwordResetService = passwordResetService;
             _credentialStorageService = credentialStorageService;
             _synchronizeUserService = synchronizeUserService;
+            _jsonManagerService = jsonManagerService;
             _serviceProvider = serviceProvider;
 
             // This ensures our LoggingService is initialized on startup.
@@ -50,7 +52,7 @@ namespace AD_User_Reset_Print.Views
             _loggingService.Log("Attempting to load user list from cache.");
             if (File.Exists(AppSettings.UserListFilePath))
             {
-                var usersFromFile = JsonManagerService.ReadFromJson<User>(AppSettings.UserListFilePath);
+                var usersFromFile = _jsonManagerService.ReadFromJson<User>(AppSettings.UserListFilePath);
                 foreach (var user in usersFromFile)
                 {
                     Users.Add(user);
@@ -154,7 +156,7 @@ namespace AD_User_Reset_Print.Views
             await Task.Run(() => _synchronizeUserService.Sync(progress));
 
             // After sync, reload from the definitive source file.
-            var newUsers = JsonManagerService.ReadFromJson<User>(AppSettings.UserListFilePath);
+            var newUsers = _jsonManagerService.ReadFromJson<User>(AppSettings.UserListFilePath);
             foreach (var user in newUsers)
             {
                 Users.Add(user);

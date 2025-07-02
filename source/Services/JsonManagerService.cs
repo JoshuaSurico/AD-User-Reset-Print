@@ -1,40 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using System.Text.Json;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace AD_User_Reset_Print.Services
 {
-    internal static class JsonManagerService
+    public class JsonManagerService : IJsonManagerService
     {
-        public static void SaveToJson<T>(List<T> items, string filePath, bool clearExisting = false)
+        private readonly ILoggingService _logger;
+
+        // Constructor for dependency injection
+        public JsonManagerService(ILoggingService logger) => _logger = logger;
+
+        public void SaveToJson<T>(List<T> items, string filePath, bool clearExisting = false)
         {
             if (clearExisting)
             {
-                // Delete the file if it exists
                 if (File.Exists(filePath))
                 {
-                    File.Delete(filePath);
+                    try
+                    {
+                        File.Delete(filePath);
+                        _logger.Log($"Cleared existing file: {filePath}", LogLevel.Debug);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Log($"Error clearing existing file '{filePath}': {ex.Message}", LogLevel.Error);
+                    }
                 }
             }
 
             List<T> existingItems = ReadFromJson<T>(filePath);
             existingItems.AddRange(items);
 
-            // Serialize the combined data back to JSON and save it to the file.
             JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true };
-            var options = jsonSerializerOptions;
-            string jsonData = JsonSerializer.Serialize(existingItems, options);
-            File.WriteAllText(filePath, jsonData);
+            string jsonData = JsonSerializer.Serialize(existingItems, jsonSerializerOptions);
+
+            try
+            {
+                File.WriteAllText(filePath, jsonData);
+                _logger.Log($"Saved {items.Count} items to {filePath}.", LogLevel.Info);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"Error saving JSON to '{filePath}': {ex.Message}", LogLevel.Error);
+            }
         }
 
-        public static List<T> ReadFromJson<T>(string filePath)
+        public List<T> ReadFromJson<T>(string filePath)
         {
-            // Return an empty list if the file doesn't exist.
-            if (!File.Exists(filePath)) return new List<T>();
+            if (!File.Exists(filePath))
+            {
+                _logger.Log($"File not found: {filePath}. Returning empty list.", LogLevel.Debug);
+                return [];
+            }
 
             try
             {
@@ -42,16 +59,21 @@ namespace AD_User_Reset_Print.Services
 
                 if (!string.IsNullOrEmpty(jsonData))
                 {
-                    return JsonSerializer.Deserialize<List<T>>(jsonData);
+                    var result = JsonSerializer.Deserialize<List<T>>(jsonData);
+                    _logger.Log($"Read {result?.Count ?? 0} items from {filePath}.", LogLevel.Info);
+                    return result ?? []; // Ensure to return an empty list if deserialization results in null
                 }
             }
             catch (JsonException ex)
             {
-                // Handle any exception that may occur during deserialization
-                Console.WriteLine("Error deserializing JSON: " + ex.Message);
+                _logger.Log($"Error deserializing JSON from '{filePath}': {ex.Message}", LogLevel.Error);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log($"An unexpected error occurred while reading from '{filePath}': {ex.Message}", LogLevel.Error);
             }
 
-            return new List<T>();
+            return [];
         }
     }
 }
