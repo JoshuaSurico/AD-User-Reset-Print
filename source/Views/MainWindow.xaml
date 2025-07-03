@@ -50,7 +50,7 @@
                        RenderOptions.BitmapScalingMode="HighQuality"/>
             </Button>
 
-            <TextBox x:Name="txtbSearch" Margin="0,70,10,0" TextWrapping="Wrap" Text="" FontSize="20" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="716" Height="40" VerticalAlignment="Top"/>
+            <TextBox x:Name="TxtbSearch" Margin="0,70,10,0" TextWrapping="Wrap" Text="" FontSize="20" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="716" Height="40" VerticalAlignment="Top" TextChanged="TxtbSearch_TextChanged"/>
 
             <ListBox x:Name="lbUsers" Margin="10,130,10,10" FontSize="20" SelectionChanged="LbUsers_SelectionChanged" MouseDoubleClick="LbUsers_MouseDoubleClick" ItemsSource="{Binding Users}">
                 <ListBox.ItemContainerStyle>

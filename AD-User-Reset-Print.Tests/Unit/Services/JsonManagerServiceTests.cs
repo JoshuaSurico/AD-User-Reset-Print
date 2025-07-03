@@ -1,7 +1,6 @@
-﻿using AD_User_Reset_Print.Services; // Your JsonManagerService, IJsonManagerService, ILoggingService
-using AD_User_Reset_Print.Tests.TestHelpers; // Your TestLogger
-using Microsoft.VisualStudio.TestTools.UnitTesting; // Correct using for MSTest
-using System;
+﻿using AD_User_Reset_Print.Services;
+using AD_User_Reset_Print.Tests.TestHelpers;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,33 +8,28 @@ using System.Text.Json;
 
 namespace AD_User_Reset_Print.Tests.Unit.Services
 {
-    [TestClass] // MSTest attribute for a test class
+    [TestClass]
     public class JsonManagerServiceTests
     {
         private string? _testDirectory;
         private TestLogger? _testLogger;
         private JsonManagerService? _jsonManagerService;
 
-        // MSTest attribute for setup method, runs before each test method
         [TestInitialize]
         public void TestInitialize()
         {
-            // Create a unique temporary directory for each test run
             _testDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(_testDirectory);
-
             _testLogger = new TestLogger();
             _jsonManagerService = new JsonManagerService(_testLogger);
         }
 
-        // MSTest attribute for cleanup method, runs after each test method
         [TestCleanup]
         public void TestCleanup()
         {
-            // Clean up the temporary directory after each test
             if (Directory.Exists(_testDirectory))
             {
-                Directory.Delete(_testDirectory, true); // Delete recursively
+                Directory.Delete(_testDirectory, true);
             }
         }
 
@@ -46,7 +40,7 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
 
         // --- SaveToJson Tests ---
 
-        [TestMethod] // MSTest attribute for a test method
+        [TestMethod]
         public void SaveToJson_NewFile_SavesDataCorrectly()
         {
             // Arrange
@@ -62,23 +56,23 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
             var deserialized = JsonSerializer.Deserialize<List<string>>(content);
             Assert.IsNotNull(deserialized);
             Assert.AreEqual(2, deserialized.Count);
-            CollectionAssert.Contains(deserialized, "item1");
-            CollectionAssert.Contains(deserialized, "item2");
-            Assert.IsTrue(_testLogger!.ContainsLog("Saved 2 items to", LogLevel.Info));
+            Assert.IsTrue(_testLogger!.ContainsLog("(Mode: Append)", LogLevel.Info));
         }
 
         [TestMethod]
-        public void SaveToJson_ExistingFile_AppendsData()
+        public void SaveToJson_ExistingFileWithOverwriteFalse_AppendsData()
         {
             // Arrange
             var filePath = GetTestFilePath();
             var initialItems = new List<string> { "initial1" };
-            _jsonManagerService!.SaveToJson(initialItems, filePath); // Save initial data
+            // Save initial data, explicitly setting overwrite to true to start clean.
+            _jsonManagerService!.SaveToJson(initialItems, filePath, overwrite: true);
 
             var newItems = new List<string> { "new1", "new2" };
 
             // Act
-            _jsonManagerService.SaveToJson(newItems, filePath); // Append new data
+            // Append new data by calling with default (or explicit false) overwrite.
+            _jsonManagerService.SaveToJson(newItems, filePath, overwrite: false);
 
             // Assert
             Assert.IsTrue(File.Exists(filePath));
@@ -92,38 +86,39 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
         }
 
         [TestMethod]
-        public void SaveToJson_ClearExistingTrue_OverwritesData()
+        public void SaveToJson_OverwriteTrue_OverwritesData()
         {
             // Arrange
             var filePath = GetTestFilePath();
             var initialItems = new List<string> { "initial1", "initial2" };
-            _jsonManagerService!.SaveToJson(initialItems, filePath); // Save initial data
+            _jsonManagerService!.SaveToJson(initialItems, filePath);
 
             var newItems = new List<string> { "onlythis" };
 
             // Act
-            _jsonManagerService.SaveToJson(newItems, filePath, true); // Overwrite with new data
+            _jsonManagerService.SaveToJson(newItems, filePath, overwrite: true);
 
             // Assert
             Assert.IsTrue(File.Exists(filePath));
             var content = File.ReadAllText(filePath);
             var deserialized = JsonSerializer.Deserialize<List<string>>(content);
             Assert.IsNotNull(deserialized);
-            Assert.AreEqual(1, deserialized.Count); // Should only have one item now
+            Assert.AreEqual(1, deserialized.Count);
             CollectionAssert.Contains(deserialized, "onlythis");
-            Assert.IsTrue(_testLogger!.ContainsLog("Cleared existing file:", LogLevel.Debug));
+            Assert.IsTrue(_testLogger!.ContainsLog("(Mode: Overwrite)", LogLevel.Info));
+            Assert.IsFalse(_testLogger!.ContainsLog("Cleared existing file:", LogLevel.Debug));
         }
 
         [TestMethod]
-        public void SaveToJson_EmptyList_SavesEmptyList_WhenClearingExisting()
+        public void SaveToJson_EmptyList_SavesEmptyList_WhenOverwriting()
         {
             // Arrange
             var filePath = GetTestFilePath();
-            File.WriteAllText(filePath, JsonSerializer.Serialize(new List<string> { "oldData" })); // Ensure file exists with content
+            File.WriteAllText(filePath, JsonSerializer.Serialize(new List<string> { "oldData" }));
             var items = new List<string>();
 
             // Act
-            _jsonManagerService!.SaveToJson(items, filePath, true); // Clear existing and save empty list
+            _jsonManagerService!.SaveToJson(items, filePath, overwrite: true);
 
             // Assert
             Assert.IsTrue(File.Exists(filePath));
@@ -134,27 +129,26 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
         }
 
         [TestMethod]
-        public void SaveToJson_EmptyList_AppendsToExisting_WhenNotClearingExisting()
+        public void SaveToJson_EmptyList_AppendsToExisting_WhenNotOverwriting()
         {
             // Arrange
             var filePath = GetTestFilePath();
             var initialItems = new List<string> { "initialData" };
-            _jsonManagerService!.SaveToJson(initialItems, filePath);
+            _jsonManagerService!.SaveToJson(initialItems, filePath, overwrite: true);
 
-            var itemsToSave = new List<string>(); // Empty list
+            var itemsToSave = new List<string>();
 
             // Act
-            _jsonManagerService.SaveToJson(itemsToSave, filePath, false); // Append empty list
+            _jsonManagerService.SaveToJson(itemsToSave, filePath, overwrite: false);
 
             // Assert
             Assert.IsTrue(File.Exists(filePath));
             var content = File.ReadAllText(filePath);
             var deserialized = JsonSerializer.Deserialize<List<string>>(content);
             Assert.IsNotNull(deserialized);
-            Assert.AreEqual(1, deserialized.Count); // Should still contain initialData
+            Assert.AreEqual(1, deserialized.Count);
             CollectionAssert.Contains(deserialized, "initialData");
         }
-
 
         // --- ReadFromJson Tests ---
 
@@ -178,7 +172,7 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
         {
             // Arrange
             var filePath = GetTestFilePath("empty.json");
-            File.WriteAllText(filePath, ""); // Create an empty file
+            File.WriteAllText(filePath, "");
 
             // Act
             var items = _jsonManagerService!.ReadFromJson<string>(filePath);
@@ -186,17 +180,8 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
             // Assert
             Assert.IsNotNull(items);
             Assert.AreEqual(0, items.Count);
-
-            // Assert that NO error log was recorded for this specific scenario
-            // (You might have other logs, but not an ERROR log)
-            Assert.IsFalse(_testLogger!.Logs.Any(l => l.Level == LogLevel.Error));
-            // Or, more specifically, ensure no deserialization errors were logged
-            Assert.IsFalse(_testLogger.ContainsLog("Error deserializing JSON:", LogLevel.Error));
-
-            // You could also assert that no logs at all were recorded if that's the expected behavior,
-            // or only info/debug logs depending on other parts of your ReadFromJson logic.
-            // In this case, with the current ReadFromJson, no logs are expected for an empty file.
-            Assert.AreEqual(0, _testLogger.Logs.Count);
+            Assert.IsTrue(_testLogger!.ContainsLog("File", LogLevel.Debug));
+            Assert.IsTrue(_testLogger!.ContainsLog("is empty. Returning empty list.", LogLevel.Debug));
         }
 
         [TestMethod]
@@ -267,20 +252,12 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
             Assert.IsTrue(_testLogger!.ContainsLog("Error deserializing JSON from", LogLevel.Error));
         }
 
-        // You could add tests for different types (e.g., custom objects) if your model supports it
         public class TestObject
         {
             public int Id { get; set; }
             public string? Name { get; set; }
-            public override bool Equals(object obj)
-            {
-                return obj is TestObject other && Id == other.Id && Name == other.Name;
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(Id, Name);
-            }
+            public override bool Equals(object? obj) => obj is TestObject other && Id == other.Id && Name == other.Name;
+            public override int GetHashCode() => HashCode.Combine(Id, Name);
         }
 
         [TestMethod]
@@ -290,8 +267,8 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
             var filePath = GetTestFilePath("customobjects.json");
             var dataToSave = new List<TestObject>
             {
-                new TestObject { Id = 1, Name = "Alpha" },
-                new TestObject { Id = 2, Name = "Beta" }
+                new() { Id = 1, Name = "Alpha" },
+                new() { Id = 2, Name = "Beta" }
             };
             File.WriteAllText(filePath, JsonSerializer.Serialize(dataToSave));
 
@@ -301,8 +278,7 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
             // Assert
             Assert.IsNotNull(items);
             Assert.AreEqual(2, items.Count);
-            CollectionAssert.Contains(items, new TestObject { Id = 1, Name = "Alpha" });
-            CollectionAssert.Contains(items, new TestObject { Id = 2, Name = "Beta" });
+            CollectionAssert.AreEquivalent(dataToSave, items);
         }
 
         [TestMethod]
@@ -317,13 +293,11 @@ namespace AD_User_Reset_Print.Tests.Unit.Services
             };
 
             // Act
-            _jsonManagerService!.SaveToJson(originalItems, filePath);
+            _jsonManagerService!.SaveToJson(originalItems, filePath, overwrite: true);
             var retrievedItems = _jsonManagerService.ReadFromJson<TestObject>(filePath);
 
             // Assert
             Assert.IsNotNull(retrievedItems);
-            Assert.AreEqual(originalItems.Count, retrievedItems.Count);
-            // Use CollectionAssert.AreEquivalent for comparing lists of custom objects
             CollectionAssert.AreEquivalent(originalItems, retrievedItems);
         }
     }

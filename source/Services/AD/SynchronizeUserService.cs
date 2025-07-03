@@ -114,7 +114,7 @@ namespace AD_User_Reset_Print.Services.AD
             progress.Report(new ProgressReport { PercentComplete = 95, CurrentActivity = "Finalizing and saving user list..." });
             // Remove duplicates again after adding all users from various groups
             allUsers = [.. allUsers.Distinct(new UserEqualityComparer())];
-            _jsonManagerService.SaveToJson(allUsers, _userListPath);
+            _jsonManagerService.SaveToJson(allUsers, _userListPath, overwrite: true);
 
             progress.Report(new ProgressReport { PercentComplete = 100, CurrentActivity = $"Synchronization complete. Found {allUsers.Count} unique users." });
             return allUsers;

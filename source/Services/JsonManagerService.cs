@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿// File: Services/JsonManagerService.cs
+using System.IO;
 using System.Text.Json;
 
 namespace AD_User_Reset_Print.Services
@@ -7,37 +8,33 @@ namespace AD_User_Reset_Print.Services
     {
         private readonly ILoggingService _logger;
 
-        // Constructor for dependency injection
         public JsonManagerService(ILoggingService logger) => _logger = logger;
 
-        public void SaveToJson<T>(List<T> items, string filePath, bool clearExisting = false)
+        // MODIFIED: Renamed 'clearExisting' to 'overwrite' for clarity and simplified logic.
+        public void SaveToJson<T>(List<T> items, string filePath, bool overwrite = false)
         {
-            if (clearExisting)
+            List<T> itemsToSave;
+
+            // If we are NOT overwriting, we read the existing items and append the new ones.
+            if (!overwrite)
             {
-                if (File.Exists(filePath))
-                {
-                    try
-                    {
-                        File.Delete(filePath);
-                        _logger.Log($"Cleared existing file: {filePath}", LogLevel.Debug);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Log($"Error clearing existing file '{filePath}': {ex.Message}", LogLevel.Error);
-                    }
-                }
+                itemsToSave = ReadFromJson<T>(filePath);
+                itemsToSave.AddRange(items);
+            }
+            else
+            {
+                // If we ARE overwriting, the list to save is just the new list.
+                itemsToSave = items;
             }
 
-            List<T> existingItems = ReadFromJson<T>(filePath);
-            existingItems.AddRange(items);
-
             JsonSerializerOptions jsonSerializerOptions = new() { WriteIndented = true };
-            string jsonData = JsonSerializer.Serialize(existingItems, jsonSerializerOptions);
+            string jsonData = JsonSerializer.Serialize(itemsToSave, jsonSerializerOptions);
 
             try
             {
+                // File.WriteAllText overwrites the file if it exists, or creates it if it doesn't.
                 File.WriteAllText(filePath, jsonData);
-                _logger.Log($"Saved {items.Count} items to {filePath}.", LogLevel.Info);
+                _logger.Log($"Saved {itemsToSave.Count} items to {filePath}. (Mode: {(overwrite ? "Overwrite" : "Append")})", LogLevel.Info);
             }
             catch (Exception ex)
             {
@@ -49,6 +46,7 @@ namespace AD_User_Reset_Print.Services
         {
             if (!File.Exists(filePath))
             {
+                // This is not an error, just a state. Log as debug.
                 _logger.Log($"File not found: {filePath}. Returning empty list.", LogLevel.Debug);
                 return [];
             }
@@ -57,12 +55,16 @@ namespace AD_User_Reset_Print.Services
             {
                 string jsonData = File.ReadAllText(filePath);
 
-                if (!string.IsNullOrEmpty(jsonData))
+                if (string.IsNullOrWhiteSpace(jsonData))
                 {
-                    var result = JsonSerializer.Deserialize<List<T>>(jsonData);
-                    _logger.Log($"Read {result?.Count ?? 0} items from {filePath}.", LogLevel.Info);
-                    return result ?? []; // Ensure to return an empty list if deserialization results in null
+                    _logger.Log($"File '{filePath}' is empty. Returning empty list.", LogLevel.Debug);
+                    return [];
                 }
+
+                var result = JsonSerializer.Deserialize<List<T>>(jsonData);
+                _logger.Log($"Read {result?.Count ?? 0} items from {filePath}.", LogLevel.Info);
+                return result ?? []; // Return an empty list if deserialization results in null
+
             }
             catch (JsonException ex)
             {

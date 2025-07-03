@@ -8,6 +8,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Data;
+using System.ComponentModel;
 
 namespace AD_User_Reset_Print.Views
 {
@@ -17,7 +19,8 @@ namespace AD_User_Reset_Print.Views
     public partial class MainWindow : Window
     {
         public ObservableCollection<User> Users { get; set; }
-        public User SelectedUser { get; set; } = new User(); // Initialize to avoid null, or make nullable
+        private readonly ICollectionView _userCollectionView;
+        public User SelectedUser { get; set; } = new User(); // Initialize to avoid null
         private string? _lastGeneratedPasswordForImmediatePrint;
 
         private readonly ILoggingService _loggingService;
@@ -32,6 +35,11 @@ namespace AD_User_Reset_Print.Views
             InitializeComponent();
             this.DataContext = this;
             Users = [];
+
+            // This creates a "view" of the Users collection that can be filtered
+            // without modifying the original collection.
+            _userCollectionView = CollectionViewSource.GetDefaultView(Users);
+            _userCollectionView.Filter = UserFilter;
 
             // Assign injected services to readonly fields
             _loggingService = loggingService;
@@ -162,6 +170,9 @@ namespace AD_User_Reset_Print.Views
                 Users.Add(user);
             }
 
+            // Refresh the view to apply the current filter to the new user list.
+            _userCollectionView.Refresh();
+
             if (_loggingService.HasErrors)
             {
                 lblUserSync.Content = "Sync completed with errors (see logs)";
@@ -208,9 +219,41 @@ namespace AD_User_Reset_Print.Views
             }
         }
 
+        // This is the filtering logic. It returns true if an item should be displayed.
+        private bool UserFilter(object item)
+        {
+            string searchText = TxtbSearch.Text.Trim();
+
+            // If the search text is less than 3 characters, show all users.
+            if (string.IsNullOrWhiteSpace(searchText) || searchText.Length < 3)
+            {
+                return true;
+            }
+
+            // Cast the item from the collection to a User object.
+            if (item is not User user)
+            {
+                return false;
+            }
+
+            // Check if the search text is contained in any of the relevant user properties.
+            // The search is case-insensitive.
+            bool matchesDisplayName = user.DisplayName.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+            bool matchesSamAccountName = user.SAMAccountName.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+            // Use null-conditional operator ?. to safely check the email, which might be null.
+            bool matchesEmail = user.Mail?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false;
+
+            return matchesDisplayName || matchesSamAccountName || matchesEmail;
+        }
+
         private void BtnFilter_Click(object sender, RoutedEventArgs e)
         {
             // Filter logic
+        }
+
+        private void TxtbSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _userCollectionView.Refresh();
         }
 
         private void BtnReset_Click(object sender, RoutedEventArgs e)
