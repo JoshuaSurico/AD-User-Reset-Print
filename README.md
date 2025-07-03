@@ -1,55 +1,41 @@
 # AD-User-Reset-Print
 
-## Files Structure
-```
-.
-├── .gitignore                      # Specifies files to ignore.
-├── README.md                       # Project README documentation.
-└── source/                         # Main source code directory.
-    ├── AD-User-Reset-Print.csproj      # Main project file for Visual Studio build settings.
-    ├── AD-User-Reset-Print.sln         # Solution file to open the project in Visual Studio.
-    ├── App.config                      # Application configuration settings
-    ├── App.xaml                        # WPF application definition, defines global resources.
-    ├── App.xaml.cs                     # Handles application startup logic and global events.
-    ├── AssemblyInfo.cs                 # Project metadata (version, title, etc.).
-    ├── Models/                         # Defines data structures and business objects.
-    │   ├── AppSettings.cs                  # Data model for application settings.
-    │   ├── CredentialEntry.cs              # Data model for storing user credentials
-    │   ├── ProgressReport.cs               # Data model for progress reporting during operations.
-    │   └── User.cs                         # Data model for AD user information.
-    ├── Properties/                     # Project-level properties and settings.
-    │   ├── Credentials.Designer.cs         # Auto-generated code for application settings (for Credentials.settings).
-    │   └── Credentials.settings            # Stores user-scoped application settings, including saved credentials.
-    ├── Resources/                      # Contains static assets like images.
-    │   ├── Icons/                          # Various icon files used in the UI.
-    │   └── SplashScreen/                   # Contains assets for the application's splash screen.
-    ├── Services/                       # Contains reusable logic and utility classes.
-    │   ├── AD/                              # Services related to Active Directory operations.
-    │   │   ├── ADSourceCheckService.cs         # Service to check Active Directory source availability.
-    │   │   ├── PasswordResetService.cs         # Service for Active Directory password reset operations.
-    │   │   └── SynchronizeUserService.cs       # Handles user synchronization with Active Directory.
-    │   ├── CredentialStorageService.cs     # Manages saving and loading encrypted credentials to/from settings.
-    │   ├── JsonManagerService.cs           # Generic service for JSON file operations.
-    │   ├── LoggingService.cs               # Service for application logging.
-    │   └── PrintService.cs                 # Handles printing functionalities.
-    └── Views/                          # Contains all user interface windows and pages.
-        ├── ADSourceConfigWindow.xaml       # XAML definition for Active Directory source configuration window.
-        ├── ADSourceConfigWindow.xaml.cs    # Code-behind for ADSourceConfigWindow.xaml.
-        ├── ADSourcesWindow.xaml            # XAML definition for managing Active Directory sources.
-        ├── ADSourcesWindow.xaml.cs         # Code-behind for ADSourcesWindow.xaml.
-        ├── CustomMessageBox.xaml           # XAML definition for custom message box dialogs.
-        ├── CustomMessageBox.xaml.cs        # Code-behind for CustomMessageBox.xaml.
-        ├── LogsWindow.xaml                 # XAML definition for displaying application logs.
-        ├── LogsWindow.xaml.cs              # Code-behind for LogsWindow.xaml.
-        ├── MainWindow.xaml                 # XAML definition for the main application window.
-        ├── MainWindow.xaml.cs              # Code-behind for MainWindow.xaml.
-        ├── PrintPreviewWindow.xaml         # XAML definition for print preview window.
-        ├── PrintPreviewWindow.xaml.cs      # Code-behind for PrintPreviewWindow.xaml.
-        ├── Settings.xaml                   # XAML definition for application settings.
-        ├── Settings.xaml.cs                # Code-behind for Settings.xaml.
-        ├── SingleAccountDetails.xaml       # XAML definition for a single user account's details.
-        └── SingleAccountDetails.xaml.cs    # Code-behind for SingleAccountDetails.xaml.
-```
+## Gestion Simplifiée des Utilisateurs Active Directory
 
-## Icons
-The icons are made by Pavel Kozlov, Wahyu Adam, Kirill Kazachek, Catalin Fertu, Arkinasi, Exomoon Design Studio, Freepik, Rahul Kaklotar & Febrian Hidayat from <a href="https://www.flaticon.com/fr/collections/MzMxMDkwMTA=">flaticon.com</a>
+**AD-User-Reset-Print** est une application de bureau conçue pour simplifier la gestion quotidienne des utilisateurs au sein d'un environnement Active Directory. Elle permet aux administrateurs ou au personnel autorisé d'effectuer rapidement des opérations courantes telles que la réinitialisation de mots de passe, la synchronisation des données utilisateurs et l'accès rapide aux informations des comptes.
+
+---
+
+### Fonctionnalités Clés
+
+* **Gestion des Sources AD :** Ajoutez et configurez facilement plusieurs sources Active Directory.
+* **Synchronisation des Utilisateurs :** Mettez à jour rapidement la liste des utilisateurs à partir de vos sources AD.
+* **Réinitialisation de Mot de Passe :** Réinitialisez les mots de passe des utilisateurs en quelques clics.
+* **Consultation des Comptes :** Accédez et visualisez les informations détaillées de chaque compte utilisateur.
+* **Impression de Fiches Utilisateur :** Générez et imprimez des fiches récapitulatives pour les utilisateurs.
+
+---
+
+### Installation et Utilisation
+
+Pour des instructions détaillées sur l'installation et l'utilisation de l'application :
+
+* Consultez le **[Manuel d'Installation](https://github.com/JoshuaSurico/AD-User-Reset-Print/wiki/Manuel-d'Installation)** dans le Wiki GitHub.
+* Pour savoir comment utiliser les différentes fonctionnalités, référez-vous au **[Manuel d'Utilisation](https://github.com/JoshuaSurico/AD-User-Reset-Print/wiki/Manuel-d'Utilisation)**.
+
+---
+
+### Contribuer et Signaler des Problèmes
+
+>[!NOTE]
+>Votre feedback est précieux ! Si vous rencontrez un problème, avez une suggestion d'amélioration ou souhaitez proposer une nouvelle fonctionnalité, veuillez ouvrir une nouvelle "Issue" ou commenter une "Issue" existante sur la [page GitHub Issues](https://github.com/JoshuaSurico/AD-User-Reset-Print/issues) du projet.
+
+---
+
+### Crédits des Icônes
+
+Les icônes utilisées dans cette application ont été conçues par :
+Pavel Kozlov, Wahyu Adam, Kirill Kazachek, Catalin Fertu, Arkinasi, Exomoon Design Studio, Freepik, Rahul Kaklotar & Febrian Hidayat.
+Toutes les icônes proviennent de [flaticon.com](https://www.flaticon.com/fr/collections/MzMxMDkwMTA=).
+
+---
