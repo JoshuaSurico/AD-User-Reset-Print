@@ -1,8 +1,6 @@
-﻿using System.Drawing;
+﻿using MahApps.Metro.IconPacks;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace AD_User_Reset_Print.Views
 {
@@ -17,79 +15,67 @@ namespace AD_User_Reset_Print.Views
             MessageText.Text = message;
             TitleText.Text = title;
 
-            // Configure buttons based on MessageBoxButton enum (as before)
+            // Button configuration remains the same
             if (buttons == MessageBoxButton.YesNo)
             {
                 BtnYes.Visibility = Visibility.Visible;
                 BtnNo.Visibility = Visibility.Visible;
             }
-            else
+            else // Hides buttons if not Yes/No (you can add an OK button later if needed)
             {
-                // If you had an "OK" button in your XAML, you'd make it visible here
-                // and hide Yes/No if only OK is desired. For now, we hide Yes/No if not explicitly YesNo.
                 BtnYes.Visibility = Visibility.Collapsed;
                 BtnNo.Visibility = Visibility.Collapsed;
             }
 
-            // Set icon using System.Drawing.SystemIcons and convert to WPF ImageSource
-            ImageSource? iconSource = null;
+            IconImage.Visibility = Visibility.Visible;
             switch (icon)
             {
                 case MessageBoxImage.Information:
-                    iconSource = ConvertIconToImageSource(SystemIcons.Information);
+                    IconImage.Kind = PackIconMaterialKind.Information;
+                    IconImage.Foreground = Brushes.DodgerBlue; // A nice blue for info
                     break;
+
                 case MessageBoxImage.Question:
-                    iconSource = ConvertIconToImageSource(SystemIcons.Question);
+                    IconImage.Kind = PackIconMaterialKind.HelpCircle;
+                    IconImage.Foreground = Brushes.SlateGray; // A neutral color for questions
                     break;
+
                 case MessageBoxImage.Warning:
-                    iconSource = ConvertIconToImageSource(SystemIcons.Warning);
+                    IconImage.Kind = PackIconMaterialKind.Alert;
+                    IconImage.Foreground = Brushes.Orange; // A clear warning color
                     break;
+
                 case MessageBoxImage.Error:
-                    iconSource = ConvertIconToImageSource(SystemIcons.Error);
+                    IconImage.Kind = PackIconMaterialKind.CloseCircle;
+                    IconImage.Foreground = Brushes.Firebrick; // A strong red for errors
                     break;
+
                 case MessageBoxImage.None:
                 default:
-                    // If no specific icon or MessageBoxImage.None, ensure it's hidden
                     IconImage.Visibility = Visibility.Collapsed;
                     break;
             }
-
-            if (iconSource != null)
-            {
-                IconImage.Source = iconSource;
-                IconImage.Visibility = Visibility.Visible; // Make sure the Image control is visible
-            }
-            else
-            {
-                IconImage.Visibility = Visibility.Collapsed; // Hide if no valid icon was loaded
-            }
-        }
-
-        // Helper method to convert System.Drawing.Icon to System.Windows.Media.ImageSource
-        private ImageSource ConvertIconToImageSource(Icon icon)
-        {
-            if (icon == null) return null;
-
-            // This is the key part: converting the GDI+ Icon handle to a WPF BitmapSource.
-            // Int32Rect.Empty means use the entire icon.
-            // BitmapSizeOptions.FromEmptyOptions() uses default size options.
-            return Imaging.CreateBitmapSourceFromHIcon(
-                icon.Handle,
-                Int32Rect.Empty,
-                BitmapSizeOptions.FromEmptyOptions()
-            );
         }
 
         private void BtnYes_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true; // Simulates MessageBoxResult.Yes
+            this.DialogResult = true;
             this.Close();
         }
 
         private void BtnNo_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false; // Simulates MessageBoxResult.No
+            this.DialogResult = false;
             this.Close();
+        }
+
+        // Add this method if you want the window to be draggable from the border
+        private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed)
+            {
+                this.DragMove();
+            }
         }
     }
 }

@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         Title="Message"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
@@ -21,7 +22,7 @@
             </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Stretch" Margin="0 0 0 10">
-                <Image x:Name="IconImage" Width="24" Height="24" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                <iconPacks:PackIconMaterial x:Name="IconImage" Width="32" Height="32" Margin="0 0 10 0" VerticalAlignment="Center" Foreground="Black"/>
                 <TextBlock x:Name="TitleText" Text="Titre" FontSize="20" FontWeight="Bold" Foreground="Black" VerticalAlignment="Center"/>
             </StackPanel>
 
@@ -30,8 +31,18 @@
             </ScrollViewer>
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="BtnYes" Content="Oui" Margin="0 0 10 0" Click="BtnYes_Click" FontSize="20" Width="80" Height="30" />
-                <Button x:Name="BtnNo" Content="Non" Click="BtnNo_Click" FontSize="20" Width="80" Height="30" />
+                <Button x:Name="BtnYes" Margin="0 0 10 0" Click="BtnYes_Click" FontSize="16" Width="90" Height="35">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="Check" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Oui"/>
+                    </StackPanel>
+                </Button>
+                <Button x:Name="BtnNo" Click="BtnNo_Click" FontSize="16" Width="90" Height="35">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="Close" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <TextBlock Text="Non"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Grid>
     </Border>

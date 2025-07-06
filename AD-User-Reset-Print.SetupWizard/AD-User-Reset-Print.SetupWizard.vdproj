@@ -15,13 +15,13 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_AEA013EC3BC84BE2B61D84810A08B62E"
+        "MsmKey" = "8:_28D55FA68953406991A4276AD82F8823"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_DC48E4E567AD415DBBFDCE6D62DB389F"
+        "MsmKey" = "8:_AEA013EC3BC84BE2B61D84810A08B62E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -122,10 +122,10 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DC48E4E567AD415DBBFDCE6D62DB389F"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_28D55FA68953406991A4276AD82F8823"
             {
-            "SourcePath" = "8:..\\source\\Resources\\AD-User-Reset-Print.ico"
-            "TargetName" = "8:AD-User-Reset-Print.ico"
+            "SourcePath" = "8:..\\source\\Resources\\Icon\\app.ico"
+            "TargetName" = "8:app.ico"
             "Tag" = "8:"
             "Folder" = "8:_CEFA09B226DA4680AFDBE788ADD1405B"
             "Condition" = "8:"
@@ -197,16 +197,16 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:AD-User-Reset-Print"
-        "ProductCode" = "8:{322E0462-6735-49A4-A930-F71BBF1978E0}"
-        "PackageCode" = "8:{FABAD819-371C-4332-9C02-1F3635B3E4BB}"
+        "ProductName" = "8:AD User Reset Print"
+        "ProductCode" = "8:{E7F02DDA-3663-44E9-891E-201CDCD0D2E0}"
+        "PackageCode" = "8:{D3FD4017-11FA-4673-A35C-FD0361C3D1FD}"
         "UpgradeCode" = "8:{1BF323D7-A3DB-4E28-8355-34416447CC71}"
         "AspNetVersion" = "8:2.0.50727.0"
         "RestartWWWService" = "11:FALSE"
-        "RemovePreviousVersions" = "11:FALSE"
+        "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.1"
+        "ProductVersion" = "8:1.0.2"
         "Manufacturer" = "8:Joshua Surico"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -215,8 +215,8 @@
         "ARPCONTACT" = "8:Joshua Surico"
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:"
-        "ARPURLINFOABOUT" = "8:"
-        "ARPPRODUCTICON" = "8:"
+        "ARPURLINFOABOUT" = "8:https://github.com/JoshuaSurico/AD-User-Reset-Print"
+        "ARPPRODUCTICON" = "8:_28D55FA68953406991A4276AD82F8823"
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
@@ -321,16 +321,16 @@
         {
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_B7F68383D7F64D73912B2864B8D1E82E"
             {
-            "Name" = "8:AD-User-Reset-Print"
+            "Name" = "8:AD User Reset Print"
             "Arguments" = "8:"
-            "Description" = "8:"
+            "Description" = "8:AD User Reset Print"
             "ShowCmd" = "3:1"
             "IconIndex" = "3:0"
             "Transitive" = "11:FALSE"
             "Target" = "8:_AEA013EC3BC84BE2B61D84810A08B62E"
             "Folder" = "8:_FC7323A2DBEB404D93D0197E6956AD4F"
             "WorkingFolder" = "8:_CEFA09B226DA4680AFDBE788ADD1405B"
-            "Icon" = "8:_DC48E4E567AD415DBBFDCE6D62DB389F"
+            "Icon" = "8:_28D55FA68953406991A4276AD82F8823"
             "Feature" = "8:"
             }
         }

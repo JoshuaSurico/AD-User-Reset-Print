@@ -8,39 +8,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <PackageIcon></PackageIcon>
-    <ApplicationIcon>Resources\AD-User-Reset-Print.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\Icon\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\Icons\data-storage.png" />
-    <None Remove="Resources\Icons\filtre.png" />
-    <None Remove="Resources\Icons\printer.png" />
-    <None Remove="Resources\Icons\question.png" />
-    <None Remove="Resources\Icons\rafraichir.png" />
-    <None Remove="Resources\Icons\reglages.png" />
-    <None Remove="Resources\Icons\reset-password.png" />
     <None Remove="Resources\SplashScreen\gyre.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\AD-User-Reset-Print.ico" />
+    <Content Include="Resources\Icon\app.ico" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="5.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="9.0.6" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.6" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Resources\Icons\data-storage.png" />
-    <Resource Include="Resources\Icons\filtre.png" />
-    <Resource Include="Resources\Icons\printer.png" />
-    <Resource Include="Resources\Icons\question.png" />
-    <Resource Include="Resources\Icons\rafraichir.png" />
-    <Resource Include="Resources\Icons\reglages.png" />
-    <Resource Include="Resources\Icons\reset-password.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,7 +44,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Credentials.Designer.cs</LastGenOutput>
     </None>
-    <None Update="Resources\AD-User-Reset-Print.ico">
+    <None Update="Resources\Icon\app.ico">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>

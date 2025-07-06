@@ -3,11 +3,11 @@
 namespace AD_User_Reset_Print.Views
 {
     /// <summary>
-    /// Logique d'interaction pour Settings.xaml
+    /// Logique d'interaction pour SettingsWindow.xaml
     /// </summary>
-    public partial class Settings : Window
+    public partial class SettingsWindow : Window
     {
-        public Settings()
+        public SettingsWindow()
         {
             InitializeComponent();
         }

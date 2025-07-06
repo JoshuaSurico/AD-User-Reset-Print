@@ -4,7 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AD_User_Reset_Print.Views"
-        xmlns:models="clr-namespace:AD_User_Reset_Print.Models" mc:Ignorable="d"
+        xmlns:models="clr-namespace:AD_User_Reset_Print.Models"
+        mc:Ignorable="d"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks" 
         Title="AD-USER-RESET-PRINT"
         Height="600"
         Width="800"
@@ -12,46 +14,44 @@
         WindowStartupLocation="CenterScreen">
     <Border Background="AliceBlue" BorderBrush="LightGray" BorderThickness="2" MouseLeftButtonDown="Window_MouseLeftButtonDown">
         <Grid>
-            <Button x:Name="btnADSettings" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnADSettings_Click">
-                <Image Source="/Resources/Icons/data-storage.png"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            <!-- Top Toolbar Buttons with Material Icons -->
+            <Button x:Name="btnADSettings" ToolTip="AD Settings" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnADSettings_Click">
+                <iconPacks:PackIconMaterial Kind="DatabaseSettings" Width="24" Height="24"/>
             </Button>
-            <Button x:Name="btnSettings" HorizontalAlignment="Left" Margin="70,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnSettings_Click">
-                <Image Source="/Resources/Icons/reglages.png"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            <Button x:Name="btnSettings" ToolTip="Application Settings" HorizontalAlignment="Left" Margin="70,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnSettings_Click">
+                <iconPacks:PackIconMaterial Kind="Cog" Width="24" Height="24"/>
             </Button>
-            <Button x:Name="btnHelp" HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnHelp_Click">
-                <Image Source="/Resources/Icons/question.png"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            <Button x:Name="btnHelp" ToolTip="Help" HorizontalAlignment="Left" Margin="130,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnHelp_Click">
+                <iconPacks:PackIconMaterial Kind="HelpCircleOutline" Width="24" Height="24"/>
             </Button>
-            <Button x:Name="btnResetPsw" HorizontalAlignment="Left" Margin="190,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnResetPsw_Click">
-                <Image Source="/Resources/Icons/reset-password.png"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            <Button x:Name="btnResetPsw" ToolTip="Reset Password" HorizontalAlignment="Left" Margin="190,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnResetPsw_Click">
+                <iconPacks:PackIconMaterial Kind="LockReset" Width="24" Height="24"/>
             </Button>
-            <Button x:Name="btnPrint" HorizontalAlignment="Left" Margin="250,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnPrint_Click">
-                <Image Source="/Resources/Icons/printer.png"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            <Button x:Name="btnPrint" ToolTip="Print" HorizontalAlignment="Left" Margin="250,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnPrint_Click">
+                <iconPacks:PackIconMaterial Kind="Printer" Width="24" Height="24"/>
             </Button>
-            <Button x:Name="btnSync" HorizontalAlignment="Left" Margin="310,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnSync_Click">
-                <Image Source="/Resources/Icons/rafraichir.png"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            <Button x:Name="btnSync" ToolTip="Refresh User List" HorizontalAlignment="Left" Margin="310,10,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnSync_Click">
+                <iconPacks:PackIconMaterial Kind="Sync" Width="24" Height="24"/>
             </Button>
 
+            <ProgressBar x:Name="pbUserSync" HorizontalAlignment="Stretch" Margin="370,10,110,0" VerticalAlignment="Top" Height="40"/>
+            <Label x:Name="lblUserSync" Content="" Margin="370,10,110,0" VerticalAlignment="Top" FontSize="20" Height="40" VerticalContentAlignment="Center"/>
 
-            <ProgressBar x:Name="pbUserSync" HorizontalAlignment="Stretch" Margin="370,10,10,0" VerticalAlignment="Top" Height="40"/>
-            <Label x:Name="lblUserSync" Content="Dernière Sync. : dd.mm.yyyy hh:mm:ss " Margin="370,10,32,0" VerticalAlignment="Top" FontSize="20" Height="40"/>
-            <Button x:Name="btnViewLogs" Content="Logs" Margin="0,10,10,0" VerticalAlignment="Top" Height="40" Width="40" Background="OrangeRed" Click="BtnViewLogs_Click" HorizontalAlignment="Right">
-                <!--<Image Source="/Resources/Icons/logs.png"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>-->
+            <Button x:Name="btnViewLogs" Margin="0,10,10,0" VerticalAlignment="Top" Height="40" HorizontalAlignment="Right" Width="90" Click="BtnViewLogs_Click">
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconMaterial Kind="ClipboardTextClockOutline" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock Text="Logs"/>
+                </StackPanel>
             </Button>
 
-            <Button x:Name="btnFilter" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnFilter_Click">
-                <Image Source="/Resources/Icons/filtre.png"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
+            <!-- Search Area with Filter Button -->
+            <Button x:Name="btnFilter" ToolTip="Filter" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top" Height="40" Width="40" Click="BtnFilter_Click">
+                <iconPacks:PackIconMaterial Kind="FilterVariant" Width="24" Height="24"/>
             </Button>
 
-            <TextBox x:Name="TxtbSearch" Margin="0,70,10,0" TextWrapping="Wrap" Text="" FontSize="20" VerticalContentAlignment="Center" HorizontalAlignment="Right" Width="716" Height="40" VerticalAlignment="Top" TextChanged="TxtbSearch_TextChanged"/>
+            <TextBox x:Name="TxtbSearch" Margin="60,70,10,0" TextWrapping="Wrap" Text="" FontSize="20" VerticalContentAlignment="Center" Height="40" VerticalAlignment="Top" TextChanged="TxtbSearch_TextChanged"/>
 
+            <!-- User ListBox with ContextMenu -->
             <ListBox x:Name="lbUsers" Margin="10,130,10,10" FontSize="20" SelectionChanged="LbUsers_SelectionChanged" MouseDoubleClick="LbUsers_MouseDoubleClick" ItemsSource="{Binding Users}">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
@@ -72,14 +72,32 @@
                 </ListBox.ItemTemplate>
                 <ListBox.ContextMenu>
                     <ContextMenu x:Name="UserContextMenu">
-                        <MenuItem Header="Reset" Click="ResetMenuItem_Click"/>
-                        <MenuItem Header="Print" Click="PrintMenuItem_Click"/>
-                        <MenuItem Header="Reset and Print" Click="ResetAndPrintMenuItem_Click"/>
+                        <MenuItem Header="Détails" Click="DetailsMenuItem_Click">
+                            <MenuItem.Icon>
+                                <iconPacks:PackIconMaterial Kind="AccountDetailsOutline" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Reset" Click="ResetMenuItem_Click">
+                            <MenuItem.Icon>
+                                <iconPacks:PackIconMaterial Kind="Key" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Imprimer" Click="PrintMenuItem_Click">
+                            <MenuItem.Icon>
+                                <iconPacks:PackIconMaterial Kind="Printer" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Reset et Imprimer" Click="ResetAndPrintMenuItem_Click">
+                            <MenuItem.Icon>
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconMaterial Kind="Key" Margin="0,0,5,0" />
+                                    <iconPacks:PackIconMaterial Kind="Printer" />
+                                </StackPanel>
+                            </MenuItem.Icon>
+                        </MenuItem>
                     </ContextMenu>
                 </ListBox.ContextMenu>
             </ListBox>
-
-            <Button x:Name="BtnReset" Content="Reset" HorizontalAlignment="Left" Margin="545,390,0,0" VerticalAlignment="Top" Height="141" Width="174" FontSize="48" Click="BtnReset_Click"/>
         </Grid>
     </Border>
 </Window>

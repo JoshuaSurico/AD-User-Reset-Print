@@ -111,22 +111,46 @@ namespace AD_User_Reset_Print.Views
 
         private void BtnResetPsw_Click(object sender, RoutedEventArgs e)
         {
+            // 1. Vérification initiale si un utilisateur est sélectionné.
             if (SelectedUser == null)
             {
-                MessageBox.Show("No user selected.", "Action Canceled", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Aucun utilisateur sélectionné.", "Action annulée", MessageBoxButton.OK, MessageBoxImage.Information);
                 _loggingService.Log("Password reset attempted with no user selected.", LogLevel.Warning);
                 return;
             }
 
-            _lastGeneratedPasswordForImmediatePrint = _passwordResetService.Reset(SelectedUser);
+            // 2. Création et affichage de la boîte de dialogue de confirmation.
+            string confirmationMessage = $"Êtes-vous sûr de vouloir réinitialiser le mot de passe pour {SelectedUser.DisplayName} ?";
+            var confirmationDialog = new CustomMessageBox(
+                confirmationMessage,
+                "Confirmer la réinitialisation",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question
+            ) { Owner = this };
 
-            if (_lastGeneratedPasswordForImmediatePrint == null)
+            // Si l'utilisateur clique sur "Oui" (DialogResult == true)
+            if (confirmationDialog.ShowDialog() == true)
             {
-                MessageBox.Show($"Failed to reset password for {SelectedUser.DisplayName}. Please check the logs for details.", "Reset Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                // 3. L'utilisateur a confirmé. Procéder à la réinitialisation.
+                _loggingService.Log($"Password reset initiated for {SelectedUser.DisplayName} after user confirmation.", LogLevel.Info);
+
+                _lastGeneratedPasswordForImmediatePrint = _passwordResetService.Reset(SelectedUser);
+
+                if (_lastGeneratedPasswordForImmediatePrint == null)
+                {
+                    // Message d'échec
+                    MessageBox.Show($"Échec de la réinitialisation du mot de passe pour {SelectedUser.DisplayName}. Veuillez consulter les journaux pour plus de détails.", "Échec de la réinitialisation", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else
+                {
+                    // Message de succès
+                    MessageBox.Show($"Le mot de passe a été réinitialisé avec succès pour {SelectedUser.DisplayName}.\nLe nouveau mot de passe temporaire est : {_lastGeneratedPasswordForImmediatePrint}", "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             else
             {
-                MessageBox.Show($"Password has been reset successfully for {SelectedUser.DisplayName}.\nThe new temporary password is: {_lastGeneratedPasswordForImmediatePrint}", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                // 4. L'utilisateur a cliqué sur "Non" ou a fermé la fenêtre.
+                _loggingService.Log($"Password reset for {SelectedUser.DisplayName} was canceled by the user.", LogLevel.Info);
             }
         }
 
@@ -277,7 +301,6 @@ namespace AD_User_Reset_Print.Views
         {
             if (lbUsers.SelectedItem is User selectedUser)
             {
-                // SingleAccountDetails also might need _loggingService if it logs.
                 SingleAccountDetails singleAccountDetailsWindow = new(selectedUser);
                 singleAccountDetailsWindow.Show();
             }
@@ -294,6 +317,16 @@ namespace AD_User_Reset_Print.Views
         }
 
         // --- Context Menu Item Clicks ---
+
+        // user infos
+        private void DetailsMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (lbUsers.SelectedItem is User selectedUser)
+            {
+                SingleAccountDetails singleAccountDetailsWindow = new(selectedUser);
+                singleAccountDetailsWindow.Show();
+            }
+        }
 
         // Reset password
         private void ResetMenuItem_Click(object sender, RoutedEventArgs e)
@@ -367,5 +400,10 @@ namespace AD_User_Reset_Print.Views
             }
         }
         #endregion
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
