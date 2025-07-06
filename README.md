@@ -31,11 +31,3 @@ Pour des instructions détaillées sur l'installation et l'utilisation de l'appl
 >Votre feedback est précieux ! Si vous rencontrez un problème, avez une suggestion d'amélioration ou souhaitez proposer une nouvelle fonctionnalité, veuillez ouvrir une nouvelle "Issue" ou commenter une "Issue" existante sur la [page GitHub Issues](https://github.com/JoshuaSurico/AD-User-Reset-Print/issues) du projet.
 
 ---
-
-### Crédits des Icônes
-
-Les icônes utilisées dans cette application ont été conçues par :
-Pavel Kozlov, Wahyu Adam, Kirill Kazachek, Catalin Fertu, Arkinasi, Exomoon Design Studio, Freepik, Rahul Kaklotar & Febrian Hidayat.
-Toutes les icônes proviennent de [flaticon.com](https://www.flaticon.com/fr/collections/MzMxMDkwMTA=).
-
----
